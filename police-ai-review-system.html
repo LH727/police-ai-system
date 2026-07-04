@@ -1,0 +1,4653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公安AI卷宗审查系统</title>
+<style>
+  :root {
+    --primary: #0A2F6A;
+    --primary-light: #0D3D8A;
+    --primary-dark: #061E44;
+    --accent: #1B7FE5;
+    --accent-glow: rgba(27, 127, 229, 0.25);
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    /* 风险颜色体系 */
+    --risk-high: #EF4444;
+    --risk-high-bg: rgba(239,68,68,0.15);
+    --risk-high-border: rgba(239,68,68,0.35);
+    --risk-medium: #F59E0B;
+    --risk-medium-bg: rgba(245,158,11,0.15);
+    --risk-medium-border: rgba(245,158,11,0.35);
+    --risk-low: #3B82F6;
+    --risk-low-bg: rgba(59,130,246,0.15);
+    --risk-low-border: rgba(59,130,246,0.35);
+    --risk-pass: #10B981;
+    --risk-pass-bg: rgba(16,185,129,0.15);
+    --risk-pass-border: rgba(16,185,129,0.35);
+    --bg: #0A1628;
+    --bg-card: #0F1F3A;
+    --bg-card-hover: #132647;
+    --bg-sidebar: #09172E;
+    --bg-input: #0B1A33;
+    --border: #1A3360;
+    --border-light: #223D6E;
+    --text: #E2E8F0;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.25);
+    --shadow: 0 4px 24px rgba(0,0,0,0.35);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== 左侧导航栏 ===== */
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .sidebar-logo .shield-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--accent), #3B82F6);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 0 16px var(--accent-glow);
+  }
+
+  .sidebar-logo .title {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #fff;
+  }
+  .sidebar-logo .subtitle {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 12px 8px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    margin-bottom: 2px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all var(--transition);
+    position: relative;
+    user-select: none;
+  }
+
+  .nav-item:hover {
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+  }
+
+  .nav-item.active {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(10, 47, 106, 0.5);
+  }
+
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 0 3px 3px 0;
+  }
+
+  .nav-item .icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .nav-item .badge {
+    margin-left: auto;
+    background: var(--danger);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .sidebar-footer .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .sidebar-footer .info { flex: 1; }
+  .sidebar-footer .name { color: var(--text); font-weight: 600; }
+  .sidebar-footer .role { font-size: 11px; }
+
+  /* ===== 主区域 ===== */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* ===== 顶部状态栏 ===== */
+  .topbar {
+    height: 56px;
+    min-height: 56px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+  }
+
+  .topbar-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .topbar-breadcrumb .current {
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .topbar-breadcrumb .sep {
+    color: var(--text-muted);
+    margin: 0 2px;
+  }
+
+  .topbar-clock {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .topbar-indicators {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .indicator .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .dot.green { background: var(--success); box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+  .dot.warn { background: var(--warning); box-shadow: 0 0 6px rgba(245,158,11,0.5); }
+
+  .topbar-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+  }
+
+  /* ===== 内容区域 ===== */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  .content::-webkit-scrollbar {
+    width: 6px;
+  }
+  .content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .content::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 3px;
+  }
+
+  /* ===== 页面容器 ===== */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ===== 卡片 ===== */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: border-color var(--transition);
+  }
+  .card:hover {
+    border-color: var(--border-light);
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .card-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* ===== 统计卡片行 ===== */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all var(--transition);
+  }
+  .stat-card:hover {
+    border-color: var(--border-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+  }
+  .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .stat-icon.blue  { background: rgba(27,127,229,0.15); }
+  .stat-icon.green { background: rgba(16,185,129,0.15); }
+  .stat-icon.amber { background: rgba(245,158,11,0.15); }
+  .stat-icon.red   { background: rgba(239,68,68,0.15); }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  .stat-change {
+    font-size: 11px;
+    margin-top: 2px;
+    font-weight: 500;
+  }
+  .stat-change.up   { color: var(--success); }
+  .stat-change.down { color: var(--danger); }
+
+  /* ===== 表格 ===== */
+  .table-wrap {
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table th {
+    text-align: left;
+    padding: 10px 14px;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid rgba(26,51,96,0.5);
+    white-space: nowrap;
+  }
+  table tbody tr {
+    transition: background var(--transition);
+  }
+  table tbody tr:hover {
+    background: rgba(255,255,255,0.02);
+  }
+
+  /* ===== 标签 ===== */
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .tag-success  { background: rgba(16,185,129,0.15); color: var(--success); }
+  .tag-warning  { background: rgba(245,158,11,0.15); color: var(--warning); }
+  .tag-danger   { background: rgba(239,68,68,0.15);  color: var(--danger); }
+  .tag-info     { background: rgba(27,127,229,0.15);  color: var(--accent); }
+  .tag-default  { background: rgba(148,163,184,0.12); color: var(--text-secondary); }
+
+  /* ===== 按钮 ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all var(--transition);
+    white-space: nowrap;
+    user-select: none;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover {
+    background: #1A6FD6;
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--text-secondary);
+    border-color: var(--border-light);
+  }
+  .btn-outline:hover {
+    color: #fff;
+    border-color: var(--text-muted);
+  }
+  .btn-sm {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* ===== 输入框 ===== */
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    width: 260px;
+  }
+  .search-box input {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+    font-family: inherit;
+  }
+  .search-box input::placeholder { color: var(--text-muted); }
+  .search-box .icon { color: var(--text-muted); font-size: 14px; }
+
+  /* ===== 进度条 ===== */
+  .progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+  .progress-fill.blue  { background: var(--accent); }
+  .progress-fill.green { background: var(--success); }
+  .progress-fill.amber { background: var(--warning); }
+
+  /* ===== 审查卡片（审查中心用） ===== */
+  .review-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: all var(--transition);
+  }
+  .review-card:hover {
+    border-color: var(--border-light);
+  }
+  .review-card .severity {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+  .severity.high   { background: rgba(239,68,68,0.18);  color: var(--danger); }
+  .severity.medium { background: rgba(245,158,11,0.18);  color: var(--warning); }
+  .severity.low    { background: rgba(27,127,229,0.18);   color: var(--accent); }
+  .review-card .body { flex: 1; }
+  .review-card .title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .review-card .desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+  .review-card .meta { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+  /* ===== 时间线 ===== */
+  .timeline {
+    position: relative;
+    padding-left: 24px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: var(--border);
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg-card);
+    z-index: 1;
+  }
+  .timeline-item .time {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .timeline-item .text {
+    font-size: 13px;
+    margin-top: 2px;
+    line-height: 1.5;
+  }
+
+  /* ===== 报告页面 ===== */
+  .report-template {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .report-template .name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .report-template .desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  /* ===== 文件列表 ===== */
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    transition: background var(--transition);
+    cursor: default;
+  }
+  .file-item:hover {
+    background: rgba(255,255,255,0.03);
+  }
+  .file-item .file-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .file-item .file-info { flex: 1; }
+  .file-item .file-name { font-size: 13px; font-weight: 500; }
+  .file-item .file-size { font-size: 11px; color: var(--text-muted); }
+
+  /* ===== 两栏布局 ===== */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  /* ===== 响应式提示 ===== */
+  @media (max-width: 900px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .sidebar { width: 200px; min-width: 200px; }
+  }
+
+  /* ===== 空状态 ===== */
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-state .text { font-size: 13px; }
+
+  /* ===== 链接 ===== */
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ===== 选中高亮文本 ===== */
+  ::selection {
+    background: rgba(27,127,229,0.3);
+    color: #fff;
+  }
+
+  /* ===== Tab 切换 ===== */
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border);
+  }
+  .tab-btn {
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: inherit;
+    position: relative;
+  }
+  .tab-btn:hover {
+    color: #fff;
+  }
+  .tab-btn.active {
+    color: #fff;
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+  }
+  .tab-btn .tab-count {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.08);
+  }
+  .tab-btn.active .tab-count {
+    background: var(--accent);
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ===== 上传区域 ===== */
+  .upload-zone {
+    border: 2px dashed var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition);
+    background: rgba(255,255,255,0.01);
+    position: relative;
+  }
+  .upload-zone:hover,
+  .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(27,127,229,0.05);
+    box-shadow: inset 0 0 60px rgba(27,127,229,0.04);
+  }
+  .upload-zone .upload-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+  .upload-zone .upload-hint {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .upload-zone .upload-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  #fileInput { display: none; }
+
+  /* ===== OCR 进度面板 ===== */
+  .ocr-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .ocr-panel.visible { display: block; }
+  .ocr-panel .ocr-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .ocr-panel .ocr-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .ocr-panel .ocr-status {
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .ocr-file-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+  }
+  .ocr-file-row + .ocr-file-row {
+    border-top: 1px solid rgba(26,51,96,0.4);
+  }
+  .ocr-file-row .ocr-file-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .ocr-file-row .ocr-file-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .ocr-file-row .ocr-file-name {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ocr-file-row .ocr-file-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .ocr-progress-wrap {
+    flex: 0 0 200px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ocr-progress-wrap .progress-bar {
+    flex: 1;
+    margin-top: 0;
+  }
+  .ocr-progress-wrap .progress-pct {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 38px;
+    text-align: right;
+  }
+  .ocr-file-row .ocr-done {
+    font-size: 18px;
+    color: var(--success);
+  }
+  .ocr-file-row .ocr-pending {
+    font-size: 18px;
+    color: var(--text-muted);
+  }
+
+  /* 上传文件队列 */
+  .upload-queue {
+    margin-top: 12px;
+    display: none;
+  }
+  .upload-queue.visible {
+    display: block;
+  }
+  .upload-queue-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .upload-queue-item .q-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .upload-queue-item .q-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .upload-queue-item .q-size {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .upload-queue-item .q-remove {
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: color var(--transition);
+    background: none;
+    border: none;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .upload-queue-item .q-remove:hover {
+    color: var(--danger);
+    background: rgba(239,68,68,0.1);
+  }
+
+  /* ===== 审查中心 ===== */
+
+  /* 模块标题 */
+  .module-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .module-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* 环形图容器 */
+  .donut-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+  .donut-chart {
+    width: 200px;
+    height: 200px;
+    flex-shrink: 0;
+  }
+  .donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .donut-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background var(--transition);
+  }
+  .donut-legend-item:hover {
+    background: rgba(255,255,255,0.04);
+  }
+  .donut-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .donut-legend-dot.red   { background: #EF4444; }
+  .donut-legend-dot.amber { background: #F59E0B; }
+  .donut-legend-dot.blue  { background: #3B82F6; }
+  .donut-legend-dot.green { background: #10B981; }
+  .donut-legend-val {
+    font-weight: 700;
+    margin-left: auto;
+    color: #fff;
+  }
+
+  /* 可点击问题列表 */
+  .problem-list {
+    list-style: none;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .problem-list::-webkit-scrollbar {
+    width: 4px;
+  }
+  .problem-list::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 2px;
+  }
+  .problem-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+  .problem-item:hover {
+    background: rgba(255,255,255,0.04);
+  }
+  .problem-item.active {
+    background: rgba(27,127,229,0.12);
+    border-left: 3px solid var(--accent);
+  }
+  .problem-item .p-sev {
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .problem-item .p-info { flex: 1; }
+  .problem-item .p-title {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .problem-item .p-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* 横向时间线 */
+  .h-timeline {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    position: relative;
+    padding: 20px 0 10px;
+    margin: 0 10px;
+  }
+  .h-timeline::before {
+    content: '';
+    position: absolute;
+    top: 41px;
+    left: 8%;
+    right: 8%;
+    height: 3px;
+    background: var(--border);
+    z-index: 0;
+  }
+  .h-tl-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
+    flex: 1;
+    transition: transform var(--transition);
+  }
+  .h-tl-node:hover {
+    transform: translateY(-2px);
+  }
+  .h-tl-node.conflict .h-tl-dot {
+    border-color: #EF4444;
+    box-shadow: 0 0 12px rgba(239,68,68,0.6);
+  }
+  .h-tl-node.conflict .h-tl-label {
+    color: #EF4444;
+  }
+  .h-tl-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 3px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all var(--transition);
+    flex-shrink: 0;
+  }
+  .h-tl-node.conflict .h-tl-dot {
+    animation: pulse-red 1.5s infinite;
+  }
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+    50% { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
+  }
+  .h-tl-node.done .h-tl-dot {
+    background: var(--success);
+    border-color: var(--success);
+  }
+  .h-tl-node.active-node .h-tl-dot {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+  .h-tl-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: center;
+    transition: color var(--transition);
+  }
+  .h-tl-node:hover .h-tl-label {
+    color: #fff;
+  }
+  .h-tl-date {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: center;
+    white-space: nowrap;
+  }
+  .h-tl-node.conflict .h-tl-date {
+    color: #EF4444;
+  }
+  .h-tl-alert {
+    font-size: 10px;
+    color: #EF4444;
+    text-align: center;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* 时间线详情弹出 */
+  .tl-detail-popup {
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    animation: fadeIn 0.2s ease;
+  }
+  .tl-detail-popup.visible { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 关系图容器 */
+  .relation-wrap {
+    display: flex;
+    gap: 16px;
+    min-height: 450px;
+  }
+  .relation-chart {
+    flex: 1;
+    min-width: 350px;
+    height: 450px;
+  }
+  .relation-detail {
+    width: 310px;
+    min-width: 260px;
+    flex-shrink: 0;
+    border-left: 1px solid var(--border);
+    padding-left: 16px;
+    overflow-y: auto;
+    max-height: 450px;
+  }
+  .relation-detail::-webkit-scrollbar {
+    width: 4px;
+  }
+  .relation-detail::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 2px;
+  }
+  .rel-detail-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 8px;
+  }
+  .rel-detail-card .rd-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .rel-detail-card .rd-row {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 3px;
+    display: flex;
+    gap: 6px;
+  }
+  .rel-detail-card .rd-row .rd-label {
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .rel-detail-placeholder {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* 要素卡片 */
+  .element-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .element-card {
+    background: rgba(255,255,255,0.015);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .element-card:hover {
+    border-color: var(--accent);
+    background: rgba(27,127,229,0.04);
+    transform: translateY(-1px);
+  }
+  .element-card .ec-icon {
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .element-card .ec-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .element-card .ec-items {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .element-card .ec-items span {
+    display: inline-block;
+    background: rgba(255,255,255,0.05);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin: 2px 3px 2px 0;
+  }
+
+  /* TAG增强 */
+  .tag-clickable {
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .tag-clickable:hover {
+    filter: brightness(1.3);
+    transform: scale(1.05);
+  }
+
+  /* 点击涟漪反馈 */
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(27,127,229,0.3);
+    transform: scale(0);
+    animation: rippleAnim 0.6s ease-out;
+    pointer-events: none;
+  }
+  @keyframes rippleAnim {
+    to { transform: scale(3); opacity: 0; }
+  }
+
+  /* ===== 底部溯源抽屉 ===== */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .drawer-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .drawer {
+    position: fixed;
+    bottom: 0;
+    left: 240px;
+    right: 0;
+    height: 52%;
+    background: var(--bg-card);
+    border-top: 1px solid var(--accent);
+    z-index: 101;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+  }
+  .drawer.open {
+    transform: translateY(0);
+  }
+
+  .drawer-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    cursor: ns-resize;
+  }
+  .drawer-handle-bar {
+    width: 48px;
+    height: 4px;
+    background: var(--border-light);
+    border-radius: 2px;
+    transition: background var(--transition);
+  }
+  .drawer-handle:hover .drawer-handle-bar {
+    background: var(--accent);
+  }
+
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 24px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .drawer-header .dh-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .drawer-header .dh-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .drawer-header .dh-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .drawer-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border-light);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+  }
+  .drawer-close:hover {
+    color: #fff;
+    border-color: var(--danger);
+    background: rgba(239,68,68,0.12);
+  }
+
+  .drawer-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* 左侧：卷宗原文 */
+  .drawer-doc {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    border-right: 1px solid var(--border);
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Serif SC", serif;
+  }
+  .drawer-doc::-webkit-scrollbar { width: 5px; }
+  .drawer-doc::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+  .drawer-doc .doc-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .drawer-doc .doc-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .drawer-doc .doc-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .drawer-doc .doc-content {
+    font-size: 14px;
+    line-height: 2;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+  }
+
+  .doc-highlight {
+    background: rgba(239,68,68,0.25);
+    color: #fff;
+    padding: 2px 0;
+    border-radius: 2px;
+    animation: highlightPulse 1.5s ease-in-out 3;
+    cursor: pointer;
+    transition: background var(--transition);
+    position: relative;
+  }
+  .doc-highlight:hover {
+    background: rgba(239,68,68,0.45);
+  }
+  .doc-highlight::after {
+    content: ' ⚠';
+    font-size: 11px;
+  }
+  @keyframes highlightPulse {
+    0%, 100% { background: rgba(239,68,68,0.25); }
+    50%      { background: rgba(239,68,68,0.45); }
+  }
+
+  .doc-highlight.warn {
+    background: rgba(245,158,11,0.25);
+  }
+  .doc-highlight.warn::after {
+    content: ' ⚡';
+  }
+  .doc-highlight.warn:hover {
+    background: rgba(245,158,11,0.45);
+  }
+  @keyframes highlightPulseWarn {
+    0%, 100% { background: rgba(245,158,11,0.25); }
+    50%      { background: rgba(245,158,11,0.45); }
+  }
+
+  /* 右侧：问题摘要 */
+  .drawer-sidebar {
+    width: 300px;
+    min-width: 300px;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .drawer-sidebar::-webkit-scrollbar { width: 4px; }
+  .drawer-sidebar::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+
+  .drawer-sidebar .ds-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+  .drawer-sidebar .ds-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .drawer-sidebar .ds-card .ds-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .drawer-sidebar .ds-card .ds-value {
+    font-size: 13px;
+    color: #fff;
+    font-weight: 500;
+  }
+
+  /* 导航跳转按钮 */
+  .drawer-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    border: 1px solid var(--border-light);
+    background: transparent;
+    color: var(--accent);
+    transition: all var(--transition);
+    font-family: inherit;
+  }
+  .drawer-nav-btn:hover {
+    background: rgba(27,127,229,0.12);
+    border-color: var(--accent);
+  }
+
+  /* 联动高亮标记 */
+  .linked-highlight {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    animation: linkedPulse 2s ease-in-out infinite;
+  }
+  @keyframes linkedPulse {
+    0%, 100% { outline-color: var(--accent); }
+    50%      { outline-color: rgba(27,127,229,0.3); }
+  }
+
+  /* Toast 样式 */
+  .review-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 9999;
+    box-shadow: 0 4px 16px rgba(27,127,229,0.4);
+  }
+
+  /* 响应式 */
+  @media (max-width: 1100px) {
+    .relation-wrap { flex-direction: column; }
+    .relation-chart { width: 100%; height: 350px; flex: none; }
+    .relation-detail { width: 100%; min-width: auto; border-left: none; padding-left: 0; max-height: 220px; }
+    .element-grid { grid-template-columns: 1fr; }
+    .h-timeline { flex-wrap: wrap; gap: 12px; }
+    .h-timeline::before { display: none; }
+    .drawer { left: 0; height: 65%; }
+    .drawer-sidebar { width: 240px; min-width: 240px; }
+  }
+
+  @media (max-width: 700px) {
+    .drawer-body { flex-direction: column; }
+    .drawer-doc { border-right: none; border-bottom: 1px solid var(--border); }
+    .drawer-sidebar { width: 100%; min-width: auto; }
+  }
+
+  /* ============================================================
+     产品级UI增强
+     ============================================================ */
+
+  /* ----- 骨架屏 ----- */
+  .skeleton {
+    background: linear-gradient(90deg,
+      rgba(255,255,255,0.03) 25%,
+      rgba(255,255,255,0.07) 50%,
+      rgba(255,255,255,0.03) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 4px;
+  }
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .skeleton-text    { height: 14px; margin-bottom: 8px; }
+  .skeleton-text-sm { height: 11px; margin-bottom: 6px; width: 60%; }
+  .skeleton-title   { height: 18px; margin-bottom: 10px; width: 45%; }
+  .skeleton-card    { height: 120px; border-radius: var(--radius-lg); margin-bottom: 16px; }
+  .skeleton-chart   { height: 200px; border-radius: var(--radius-lg); margin-bottom: 16px; }
+  .skeleton-row     { height: 36px; margin-bottom: 6px; }
+  .skeleton-circle  { width: 200px; height: 200px; border-radius: 50%; margin: 0 auto; }
+
+  .skeleton-wrap {
+    display: none;
+    padding: 20px 0;
+  }
+  .skeleton-wrap.visible {
+    display: block;
+  }
+  .skeleton-wrap .grid-2,
+  .skeleton-wrap .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .skeleton-wrap .stat-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* 骨架屏渐隐 + 内容渐显 */
+  .skeleton-fade-out {
+    animation: fadeOutSkel 0.35s ease forwards;
+  }
+  @keyframes fadeOutSkel {
+    to { opacity: 0; transform: translateY(-8px); }
+  }
+  .content-fade-in {
+    animation: fadeInContent 0.4s ease forwards;
+  }
+  @keyframes fadeInContent {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ----- 卡片浮起效果 (增强) ----- */
+  .card {
+    transition: transform var(--transition-smooth), box-shadow var(--transition-smooth), border-color var(--transition-smooth);
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(27,127,229,0.25);
+  }
+  .stat-card {
+    transition: transform var(--transition-spring), box-shadow var(--transition-spring), border-color var(--transition-smooth);
+  }
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+    border-color: rgba(27,127,229,0.3);
+  }
+  .element-card {
+    transition: transform var(--transition-spring), box-shadow var(--transition-spring), border-color var(--transition-smooth), background var(--transition-smooth);
+  }
+  .element-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.4);
+    border-color: rgba(27,127,229,0.35);
+    background: rgba(27,127,229,0.05);
+  }
+  .review-card {
+    transition: transform var(--transition-smooth), box-shadow var(--transition-smooth), border-color var(--transition-smooth);
+  }
+  .review-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    border-color: rgba(27,127,229,0.2);
+  }
+  .report-template {
+    transition: transform var(--transition-spring), box-shadow var(--transition-spring), border-color var(--transition-smooth);
+  }
+  .report-template:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    border-color: rgba(27,127,229,0.35);
+  }
+
+  /* ----- 按钮点击反馈动画 ----- */
+  .btn {
+    transition: transform 0.12s ease, box-shadow var(--transition), background var(--transition), border-color var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn:active {
+    transform: scale(0.94);
+  }
+  .btn:active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    border-radius: inherit;
+    animation: btnFlash 0.3s ease;
+  }
+  @keyframes btnFlash {
+    0%   { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  .btn-primary:active {
+    box-shadow: 0 0 0 6px var(--accent-glow);
+  }
+
+  /* 加载态按钮 */
+  .btn.loading {
+    pointer-events: none;
+    color: transparent !important;
+    position: relative;
+  }
+  .btn.loading::before {
+    content: '';
+    position: absolute;
+    inset: calc(50% - 8px) auto auto calc(50% - 8px);
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ----- 风险色彩体系全局应用 ----- */
+  .risk-high {
+    color: var(--risk-high);
+    background: var(--risk-high-bg);
+    border: 1px solid var(--risk-high-border);
+  }
+  .risk-medium {
+    color: var(--risk-medium);
+    background: var(--risk-medium-bg);
+    border: 1px solid var(--risk-medium-border);
+  }
+  .risk-low {
+    color: var(--risk-low);
+    background: var(--risk-low-bg);
+    border: 1px solid var(--risk-low-border);
+  }
+  .risk-pass {
+    color: var(--risk-pass);
+    background: var(--risk-pass-bg);
+    border: 1px solid var(--risk-pass-border);
+  }
+
+  /* 风险指示条（卡片左侧色条） */
+  .risk-strip {
+    position: relative;
+  }
+  .risk-strip::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+  }
+  .risk-strip.high::before   { background: var(--risk-high); }
+  .risk-strip.medium::before { background: var(--risk-medium); }
+  .risk-strip.low::before    { background: var(--risk-low); }
+  .risk-strip.pass::before   { background: var(--risk-pass); }
+
+  /* 风险色脉冲 */
+  .pulse-high {
+    animation: pulseHigh 2s ease-in-out infinite;
+  }
+  @keyframes pulseHigh {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50%      { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+  }
+
+  /* ----- 抽屉背景模糊效果 ----- */
+  .drawer-overlay {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .drawer {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(15, 31, 58, 0.92);
+  }
+
+  /* 抽屉内卡片微透明 */
+  .drawer-sidebar .ds-card {
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  /* ----- 导出报告弹窗 ----- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    width: 520px;
+    max-width: 90vw;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+    transform: translateY(20px) scale(0.96);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .modal-overlay.open .modal {
+    transform: translateY(0) scale(1);
+  }
+  .modal::-webkit-scrollbar { width: 4px; }
+  .modal::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .modal-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--border-light);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+  }
+  .modal-close:hover {
+    color: #fff;
+    background: rgba(239,68,68,0.12);
+    border-color: var(--danger);
+  }
+
+  .modal-body {
+    padding: 20px 24px;
+  }
+
+  .modal-footer {
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* 导出格式选择卡片 */
+  .format-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .format-card {
+    background: rgba(255,255,255,0.02);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-smooth);
+  }
+  .format-card:hover {
+    border-color: var(--border-light);
+    background: rgba(255,255,255,0.04);
+    transform: translateY(-2px);
+  }
+  .format-card.selected {
+    border-color: var(--accent);
+    background: rgba(27,127,229,0.08);
+    box-shadow: 0 0 16px rgba(27,127,229,0.2);
+  }
+  .format-card .fc-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+  .format-card .fc-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+  .format-card .fc-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* 导出进度 */
+  .export-progress {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .export-progress.visible { display: block; }
+  .export-progress .ep-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  .export-progress .ep-text {
+    font-size: 14px;
+    color: #fff;
+    font-weight: 500;
+  }
+  .export-progress .ep-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .export-progress .ep-bar-wrap {
+    width: 260px;
+    margin: 16px auto 0;
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+  }
+  .export-progress .ep-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  /* 导出成功 */
+  .export-success {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .export-success.visible { display: block; }
+  .export-success .es-icon {
+    font-size: 56px;
+    margin-bottom: 8px;
+    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes popIn {
+    0%   { transform: scale(0); opacity: 0; }
+    80%  { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .export-success .es-text {
+    font-size: 15px;
+    color: #fff;
+    font-weight: 600;
+  }
+  .export-success .es-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* 详情折叠 */
+  .collapse-toggle {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: color var(--transition);
+    padding: 8px 0;
+    user-select: none;
+  }
+  .collapse-toggle:hover { color: #fff; }
+  .collapse-toggle .ct-arrow {
+    transition: transform var(--transition-smooth);
+    font-size: 10px;
+  }
+  .collapse-toggle.open .ct-arrow {
+    transform: rotate(90deg);
+  }
+  .collapse-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.35s ease;
+  }
+  .collapse-body.open {
+    max-height: 500px;
+  }
+
+  /* 勾选项样式 */
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background var(--transition);
+    font-size: 13px;
+  }
+  .check-row:hover { background: rgba(255,255,255,0.03); }
+  .check-row input[type=checkbox] {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== 左侧导航栏 ==================== -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="shield-icon">🛡️</div>
+    <div>
+      <div class="title">AI卷宗审查系统</div>
+      <div class="subtitle">Public Security · V3.2</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav" id="sidebarNav">
+    <div class="nav-item active" data-page="overview">
+      <span class="icon">📊</span> 案件总览
+      <span class="badge">12</span>
+    </div>
+    <div class="nav-item" data-page="dossier">
+      <span class="icon">📁</span> 卷宗管理
+      <span class="badge">48</span>
+    </div>
+    <div class="nav-item" data-page="review">
+      <span class="icon">🔍</span> 审查中心
+      <span class="badge">7</span>
+    </div>
+    <div class="nav-item" data-page="report">
+      <span class="icon">📄</span> 报告导出
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="avatar">李</div>
+    <div class="info">
+      <div class="name">李正阳</div>
+      <div class="role">法制大队 · 审查员</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ==================== 主区域 ==================== -->
+<div class="main">
+
+  <!-- ===== 顶部状态栏 ===== -->
+  <header class="topbar">
+    <div class="topbar-breadcrumb">
+      <span>🏠</span>
+      <span class="sep">/</span>
+      <span id="breadcrumbCurrent" class="current">案件总览</span>
+    </div>
+    <div class="topbar-indicators">
+      <div class="indicator">
+        <span class="dot green"></span> AI引擎在线
+      </div>
+      <div class="topbar-divider"></div>
+      <div class="indicator">
+        <span class="dot green"></span> 数据库已连接
+      </div>
+      <div class="topbar-divider"></div>
+      <div class="indicator">
+        <span>📡</span> 审查队列 3
+      </div>
+    </div>
+    <div class="topbar-clock" id="clock">--</div>
+  </header>
+
+  <!-- ===== 内容区 ===== -->
+  <div class="content">
+
+    <!-- ========== 页面1：案件总览 ========== -->
+    <div class="page active" id="page-overview">
+
+      <!-- 统计卡片 -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">📋</div>
+          <div>
+            <div class="stat-value">128</div>
+            <div class="stat-label">案件总数</div>
+            <div class="stat-change up">↑ 12 本月新增</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">✅</div>
+          <div>
+            <div class="stat-value">96</div>
+            <div class="stat-label">已审查</div>
+            <div class="stat-change up">↑ 8 本周完成</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon amber">⏳</div>
+          <div>
+            <div class="stat-value">25</div>
+            <div class="stat-label">审查中</div>
+            <div class="stat-change down">3 逾期</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">⚠️</div>
+          <div>
+            <div class="stat-value">7</div>
+            <div class="stat-label">高风险案件</div>
+            <div class="stat-change down">需立即处理</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 案件分类 Tab -->
+      <div class="tab-bar" id="overviewTabs">
+        <button class="tab-btn active" data-tab="tab-criminal">
+          刑事案件<span class="tab-count">86</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-admin">
+          行政案件<span class="tab-count">42</span>
+        </button>
+      </div>
+
+      <!-- 近期案件 + 审查趋势 -->
+      <div class="grid-2">
+
+        <!-- Tab面板：刑事案件 -->
+        <div class="tab-panel active" id="tab-criminal">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📌 刑事案件 · 近期录入</div>
+                <div class="card-subtitle">最近7天录入 · 共86件</div>
+              </div>
+              <button class="btn btn-outline btn-sm">查看全部 →</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>案件编号</th><th>案件名称</th><th>类型</th><th>录入时间</th><th>状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><a href="#">(2026)京公刑字0102号</a></td>
+                    <td>张某涉嫌诈骗案</td>
+                    <td><span class="tag tag-warning">刑事</span></td>
+                    <td>2026-07-03 14:30</td>
+                    <td><span class="tag tag-info">处理中</span></td>
+                  </tr>
+                  <tr>
+                    <td><a href="#">(2026)京公刑字0098号</a></td>
+                    <td>李某等人寻衅滋事案</td>
+                    <td><span class="tag tag-warning">刑事</span></td>
+                    <td>2026-07-03 09:15</td>
+                    <td><span class="tag tag-success">完成</span></td>
+                  </tr>
+                  <tr>
+                    <td><a href="#">(2026)京公刑字0089号</a></td>
+                    <td>赵某故意伤害案</td>
+                    <td><span class="tag tag-warning">刑事</span></td>
+                    <td>2026-07-02 11:08</td>
+                    <td><span class="tag tag-danger">风险</span></td>
+                  </tr>
+                  <tr>
+                    <td><a href="#">(2026)京公刑字0078号</a></td>
+                    <td>刘某盗窃案</td>
+                    <td><span class="tag tag-warning">刑事</span></td>
+                    <td>2026-07-02 09:35</td>
+                    <td><span class="tag tag-success">完成</span></td>
+                  </tr>
+                  <tr>
+                    <td><a href="#">(2026)京公刑字0062号</a></td>
+                    <td>陈某聚众赌博案</td>
+                    <td><span class="tag tag-warning">刑事</span></td>
+                    <td>2026-07-01 08:55</td>
+                    <td><span class="tag tag-success">完成</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab面板：行政案件 -->
+        <div class="tab-panel" id="tab-admin">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📌 行政案件 · 近期录入</div>
+                <div class="card-subtitle">最近7天录入 · 共42件</div>
+              </div>
+              <button class="btn btn-outline btn-sm">查看全部 →</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>案件编号</th><th>案件名称</th><th>类型</th><th>录入时间</th><th>状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><a href="#">(2026)京公治字0075号</a></td>
+                    <td>王某非法经营案</td>
+                    <td><span class="tag tag-info">行政</span></td>
+                    <td>2026-07-02 16:42</td>
+                    <td><span class="tag tag-info">处理中</span></td>
+                  </tr>
+                  <tr>
+                    <td><a href="#">(2026)京公治字0072号</a></td>
+                    <td>某公司消防安全违规案</td>
+                    <td><span class="tag tag-info">行政</span></td>
+                    <td>2026-07-01 14:20</td>
+                    <td><span class="tag tag-success">完成</span></td>
+                  </tr>
+                  <tr>
+                    <td><a href="#">(2026)京公治字0068号</a></td>
+                    <td>刘某扰乱公共秩序案</td>
+                    <td><span class="tag tag-info">行政</span></td>
+                    <td>2026-06-30 10:15</td>
+                    <td><span class="tag tag-danger">风险</span></td>
+                  </tr>
+                  <tr>
+                    <td><a href="#">(2026)京公治字0065号</a></td>
+                    <td>某酒店违规登记案</td>
+                    <td><span class="tag tag-info">行政</span></td>
+                    <td>2026-06-29 16:30</td>
+                    <td><span class="tag tag-success">完成</span></td>
+                  </tr>
+                  <tr>
+                    <td><a href="#">(2026)京公治字0059号</a></td>
+                    <td>张某打架斗殴案</td>
+                    <td><span class="tag tag-info">行政</span></td>
+                    <td>2026-06-28 09:00</td>
+                    <td><span class="tag tag-info">处理中</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📈 审查趋势</div>
+              <div class="card-subtitle">近30天数据</div>
+            </div>
+            <button class="btn btn-outline btn-sm">详细 →</button>
+          </div>
+          <!-- 简易柱状图 -->
+          <div style="display:flex;align-items:flex-end;gap:12px;height:180px;padding:8px 0;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:100%;background:var(--accent);height:120px;border-radius:4px 4px 0 0;transition:height 0.3s;" title="12件"></div>
+              <span style="font-size:10px;color:var(--text-muted);">6/5</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:100%;background:var(--accent);height:95px;border-radius:4px 4px 0 0;" title="9件"></div>
+              <span style="font-size:10px;color:var(--text-muted);">6/10</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:100%;background:var(--accent);height:145px;border-radius:4px 4px 0 0;" title="15件"></div>
+              <span style="font-size:10px;color:var(--text-muted);">6/15</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:100%;background:var(--accent);height:100px;border-radius:4px 4px 0 0;" title="10件"></div>
+              <span style="font-size:10px;color:var(--text-muted);">6/20</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:100%;background:var(--accent);height:170px;border-radius:4px 4px 0 0;" title="18件"></div>
+              <span style="font-size:10px;color:var(--text-muted);">6/25</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:100%;background:var(--accent);height:130px;border-radius:4px 4px 0 0;" title="13件"></div>
+              <span style="font-size:10px;color:var(--text-muted);">6/30</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:100%;background:var(--accent);height:155px;border-radius:4px 4px 0 0;" title="16件"></div>
+              <span style="font-size:10px;color:var(--text-muted);">7/4</span>
+            </div>
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-muted);text-align:center;">单位：件 / 5天一组</div>
+        </div>
+      </div>
+
+      <!-- 高风险案件 -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">⚠️ 高风险案件预警</div>
+            <div class="card-subtitle">AI审查标记的高风险项</div>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-outline btn-sm">筛选</button>
+            <button class="btn btn-primary btn-sm">全部处理</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>案件编号</th><th>风险类型</th><th>严重程度</th><th>描述</th><th>发现时间</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>(2026)京公刑字0091号</td>
+                <td>证据链断裂</td>
+                <td><span class="tag tag-danger">高</span></td>
+                <td>关键物证缺少扣押清单，证据链条不完整</td>
+                <td>2026-07-03 10:22</td>
+                <td><button class="btn btn-outline btn-sm">查看</button></td>
+              </tr>
+              <tr>
+                <td>(2026)京公刑字0085号</td>
+                <td>程序违法风险</td>
+                <td><span class="tag tag-danger">高</span></td>
+                <td>讯问笔录缺少权利义务告知环节记录</td>
+                <td>2026-07-02 15:40</td>
+                <td><button class="btn btn-outline btn-sm">查看</button></td>
+              </tr>
+              <tr>
+                <td>(2026)京公治字0072号</td>
+                <td>证据瑕疵</td>
+                <td><span class="tag tag-warning">中</span></td>
+                <td>证人证言签字日期不一致，存在时间矛盾</td>
+                <td>2026-07-01 09:18</td>
+                <td><button class="btn btn-outline btn-sm">查看</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 页面2：卷宗管理 ========== -->
+    <div class="page" id="page-dossier">
+
+      <!-- 搜索栏 -->
+      <div class="card" style="display:flex;align-items:center;gap:16px;">
+        <div class="search-box">
+          <span class="icon">🔍</span>
+          <input type="text" placeholder="搜索案件编号、名称、嫌疑人...">
+        </div>
+        <button class="btn btn-outline btn-sm">📅 日期筛选</button>
+        <button class="btn btn-outline btn-sm">📂 类型筛选</button>
+        <select style="background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;font-family:inherit;">
+          <option>全部状态</option>
+          <option>审查中</option>
+          <option>已完成</option>
+          <option>问题待改</option>
+        </select>
+        <!-- 模拟上传按钮 -->
+        <button class="btn btn-primary" style="margin-left:auto;" id="btnUpload">📤 上传卷宗</button>
+        <button class="btn btn-primary" id="btnStartOCR" style="display:none;">🚀 开始OCR解析</button>
+      </div>
+
+      <!-- 上传区域（默认隐藏） -->
+      <div class="card" id="uploadCard" style="display:none;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📤 上传卷宗文件</div>
+            <div class="card-subtitle">支持 PDF / Word / 图片 / 压缩包，单文件最大 200MB</div>
+          </div>
+          <button class="btn btn-outline btn-sm" id="btnCancelUpload">✕ 取消</button>
+        </div>
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-icon">📂</div>
+          <div class="upload-hint">点击选择文件 或拖拽文件到此处</div>
+          <div class="upload-sub">支持 .pdf .doc .docx .jpg .png .zip .rar</div>
+        </div>
+        <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip,.rar">
+        <div class="upload-queue" id="uploadQueue"></div>
+        <div style="margin-top:12px;text-align:right;">
+          <button class="btn btn-primary" id="btnSimUpload" style="display:none;">✅ 确认上传 (模拟)</button>
+        </div>
+      </div>
+
+      <!-- OCR 解析进度面板 -->
+      <div class="ocr-panel" id="ocrPanel">
+        <div class="ocr-header">
+          <div>
+            <div class="ocr-title">🔬 OCR 解析进度</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
+              正在对上传文件进行文字识别与结构化提取
+            </div>
+          </div>
+          <div>
+            <span class="ocr-status tag tag-info" id="ocrStatus">解析中...</span>
+          </div>
+        </div>
+        <div id="ocrFileList">
+          <!-- 动态填充 -->
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--text-muted);text-align:center;" id="ocrOverall">
+          等待开始...
+        </div>
+      </div>
+
+      <!-- 卷宗列表 -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📁 全部卷宗</div>
+            <div class="card-subtitle">共 <span id="dossierCount">48</span> 份卷宗材料</div>
+          </div>
+          <span style="font-size:12px;color:var(--text-muted);">最近更新：2026-07-04 08:30</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>案件编号</th><th>案件名称</th><th>卷宗类型</th><th>页数</th><th>AI状态</th><th>审查人</th><th>更新时间</th><th>操作</th></tr>
+            </thead>
+            <tbody id="dossierTableBody">
+              <tr>
+                <td>(2026)京公刑字0102号</td>
+                <td>张某涉嫌诈骗案</td>
+                <td><span class="tag tag-default">侦查卷</span></td>
+                <td>245</td>
+                <td><span class="tag tag-info">处理中</span></td>
+                <td>李正阳</td>
+                <td>2026-07-04 08:30</td>
+                <td><button class="btn btn-outline btn-sm">打开</button></td>
+              </tr>
+              <tr>
+                <td>(2026)京公刑字0098号</td>
+                <td>李某等人寻衅滋事案</td>
+                <td><span class="tag tag-default">诉讼卷</span></td>
+                <td>312</td>
+                <td><span class="tag tag-success">完成</span></td>
+                <td>王建国</td>
+                <td>2026-07-03 17:20</td>
+                <td><button class="btn btn-outline btn-sm">打开</button></td>
+              </tr>
+              <tr>
+                <td>(2026)京公刑字0089号</td>
+                <td>赵某故意伤害案</td>
+                <td><span class="tag tag-default">侦查卷</span></td>
+                <td>178</td>
+                <td><span class="tag tag-danger">风险</span></td>
+                <td>李正阳</td>
+                <td>2026-07-03 11:45</td>
+                <td><button class="btn btn-outline btn-sm">打开</button></td>
+              </tr>
+              <tr>
+                <td>(2026)京公治字0075号</td>
+                <td>王某非法经营案</td>
+                <td><span class="tag tag-default">补充侦查卷</span></td>
+                <td>89</td>
+                <td><span class="tag tag-warning">待复核</span></td>
+                <td>张明华</td>
+                <td>2026-07-02 14:10</td>
+                <td><button class="btn btn-outline btn-sm">打开</button></td>
+              </tr>
+              <tr>
+                <td>(2026)京公刑字0078号</td>
+                <td>刘某盗窃案</td>
+                <td><span class="tag tag-default">侦查卷</span></td>
+                <td>156</td>
+                <td><span class="tag tag-success">完成</span></td>
+                <td>王建国</td>
+                <td>2026-07-02 09:35</td>
+                <td><button class="btn btn-outline btn-sm">打开</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:12px;color:var(--text-muted);">
+          <span>显示 1-5 / 共 <span id="dossierCount2">48</span> 条</span>
+          <div class="btn-group">
+            <button class="btn btn-outline btn-sm" disabled>上一页</button>
+            <button class="btn btn-primary btn-sm">1</button>
+            <button class="btn btn-outline btn-sm">2</button>
+            <button class="btn btn-outline btn-sm">3</button>
+            <button class="btn btn-outline btn-sm">...</button>
+            <button class="btn btn-outline btn-sm">10</button>
+            <button class="btn btn-outline btn-sm">下一页</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 最近导入的卷宗文件 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📎 最近导入文件</div>
+        </div>
+        <div style="display:flex;flex-direction:column;" id="recentFiles">
+          <div class="file-item">
+            <span class="file-icon">📄</span>
+            <div class="file-info">
+              <div class="file-name">张某涉嫌诈骗案-讯问笔录(一).pdf</div>
+              <div class="file-size">2.4 MB · OCR已识别 · 2026-07-03</div>
+            </div>
+            <span class="tag tag-success">已审查</span>
+          </div>
+          <div class="file-item">
+            <span class="file-icon">📄</span>
+            <div class="file-info">
+              <div class="file-name">张某涉嫌诈骗案-银行流水.xlsx</div>
+              <div class="file-size">1.8 MB · 已上传 · 2026-07-03</div>
+            </div>
+            <span class="tag tag-info">审查中</span>
+          </div>
+          <div class="file-item">
+            <span class="file-icon">📷</span>
+            <div class="file-info">
+              <div class="file-name">现场勘查照片(12张).zip</div>
+              <div class="file-size">15.2 MB · 已解包 · 2026-07-02</div>
+            </div>
+            <span class="tag tag-success">已审查</span>
+          </div>
+          <div class="file-item">
+            <span class="file-icon">📹</span>
+            <div class="file-info">
+              <div class="file-name">讯问同步录音录像.mp4</div>
+              <div class="file-size">1.2 GB · 已转码 · 2026-07-02</div>
+            </div>
+            <span class="tag tag-warning">待审查</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 页面3：审查中心 ========== -->
+    <div class="page" id="page-review">
+
+      <!-- 骨架屏（加载时显示） -->
+      <div class="skeleton-wrap visible" id="reviewSkeleton">
+        <div class="stat-grid">
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-chart"></div>
+          </div>
+          <div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-row"></div>
+            <div class="skeleton skeleton-row"></div>
+            <div class="skeleton skeleton-row"></div>
+            <div class="skeleton skeleton-row"></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="skeleton skeleton-title"></div>
+          <div class="grid-2">
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 实际内容（加载完成后显示） -->
+      <div id="reviewContent" style="display:none;">
+
+      <!-- ========== 模块1：卷宗体检总览 ========== -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="module-title">🩺 卷宗体检总览</div>
+            <div class="module-subtitle">AI 全维度扫描 · 案件 (2026)京公刑字0102号 张某涉嫌诈骗案</div>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-outline btn-sm" id="btnRefreshCheckup">🔄 重新体检</button>
+            <button class="btn btn-primary btn-sm" id="btnExportCheckup">📥 导出报告</button>
+          </div>
+        </div>
+
+        <div class="grid-2" style="align-items:start;">
+          <!-- 左：ECharts 环形风险图 -->
+          <div>
+            <div class="donut-wrap">
+              <div class="donut-chart" id="riskDonutChart"></div>
+              <div class="donut-legend">
+                <div class="donut-legend-item" data-risk="high">
+                  <span class="donut-legend-dot red"></span> 高风险<span class="donut-legend-val">3</span>
+                </div>
+                <div class="donut-legend-item" data-risk="medium">
+                  <span class="donut-legend-dot amber"></span> 中风险<span class="donut-legend-val">5</span>
+                </div>
+                <div class="donut-legend-item" data-risk="low">
+                  <span class="donut-legend-dot blue"></span> 低风险<span class="donut-legend-val">4</span>
+                </div>
+                <div class="donut-legend-item" data-risk="pass">
+                  <span class="donut-legend-dot green"></span> 合规项<span class="donut-legend-val">17</span>
+                </div>
+              </div>
+            </div>
+            <div style="text-align:center;margin-top:8px;">
+              <span style="font-size:12px;color:var(--text-muted);">
+                综合评分 <strong style="color:#F59E0B;font-size:18px;">72</strong>/100 ·
+                审查项 12/29 ·
+                <span style="color:var(--danger);">3项高风险待处理</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- 右：可点击问题列表 -->
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:8px;">📋 发现问题清单</div>
+            <ul class="problem-list" id="problemList">
+              <li class="problem-item risk-strip high" data-pid="1" data-sev="high">
+                <span class="p-sev tag tag-danger">高</span>
+                <div class="p-info">
+                  <div class="p-title">证据链条断裂</div>
+                  <div class="p-desc">关键物证缺少扣押清单，证据链不完整</div>
+                </div>
+                <span style="font-size:10px;color:var(--text-muted);">刑字0091</span>
+              </li>
+              <li class="problem-item risk-strip high" data-pid="2" data-sev="high">
+                <span class="p-sev tag tag-danger">高</span>
+                <div class="p-info">
+                  <div class="p-title">讯问程序违法风险</div>
+                  <div class="p-desc">第二次讯问未见权利义务告知记录</div>
+                </div>
+                <span style="font-size:10px;color:var(--text-muted);">刑字0085</span>
+              </li>
+              <li class="problem-item risk-strip high pulse-high" data-pid="3" data-sev="high">
+                <span class="p-sev tag tag-danger">高</span>
+                <div class="p-info">
+                  <div class="p-title">拘留期限超期风险</div>
+                  <div class="p-desc">刑拘延长至30日缺少上一级检察院批准文书</div>
+                </div>
+                <span style="font-size:10px;color:var(--text-muted);">刑字0102</span>
+              </li>
+              <li class="problem-item risk-strip medium" data-pid="4" data-sev="medium">
+                <span class="p-sev tag tag-warning">中</span>
+                <div class="p-info">
+                  <div class="p-title">证言时间矛盾</div>
+                  <div class="p-desc">两名证人关于案发时间陈述相差约40分钟</div>
+                </div>
+                <span style="font-size:10px;color:var(--text-muted);">治字0072</span>
+              </li>
+              <li class="problem-item risk-strip medium" data-pid="5" data-sev="medium">
+                <span class="p-sev tag tag-warning">中</span>
+                <div class="p-info">
+                  <div class="p-title">鉴定意见格式不规范</div>
+                  <div class="p-desc">伤情鉴定书缺少鉴定机构公章及鉴定人签字</div>
+                </div>
+                <span style="font-size:10px;color:var(--text-muted);">刑字0080</span>
+              </li>
+              <li class="problem-item risk-strip low" data-pid="6" data-sev="low">
+                <span class="p-sev tag tag-info">低</span>
+                <div class="p-info">
+                  <div class="p-title">文书格式建议</div>
+                  <div class="p-desc">提请批准逮捕书段落格式需调整</div>
+                </div>
+                <span style="font-size:10px;color:var(--text-muted);">刑字0076</span>
+              </li>
+            </ul>
+            <!-- 问题详情弹出 -->
+            <div class="tl-detail-popup" id="problemDetail" style="margin-top:8px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 模块2：程序审查 ========== -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="module-title">⚖️ 程序审查</div>
+            <div class="module-subtitle">案件 (2026)京公刑字0102号 · 程序时间线 · 点击节点查看详情</div>
+          </div>
+          <span id="procTimelineBadge"></span>
+        </div>
+
+        <!-- 横向时间线 -->
+        <div class="h-timeline" id="procTimeline">
+          <div class="h-tl-node done" data-stage="acceptance" data-date="2026-06-15">
+            <div class="h-tl-dot">📋</div>
+            <div class="h-tl-label">受案</div>
+            <div class="h-tl-date">2026-06-15</div>
+            <div class="h-tl-alert"></div>
+          </div>
+          <div class="h-tl-node done" data-stage="filing" data-date="2026-06-16">
+            <div class="h-tl-dot">📝</div>
+            <div class="h-tl-label">立案</div>
+            <div class="h-tl-date">2026-06-16</div>
+            <div class="h-tl-alert"></div>
+          </div>
+          <div class="h-tl-node done" data-stage="investigation" data-date="2026-06-16">
+            <div class="h-tl-dot">🔍</div>
+            <div class="h-tl-label">侦查</div>
+            <div class="h-tl-date">2026-06-16 ~ 2026-07-02</div>
+            <div class="h-tl-alert"></div>
+          </div>
+          <div class="h-tl-node conflict active-node" data-stage="arrest" data-date="2026-07-02">
+            <div class="h-tl-dot">⛓️</div>
+            <div class="h-tl-label">拘留/逮捕</div>
+            <div class="h-tl-date">2026-07-02</div>
+            <div class="h-tl-alert">⚠ 超期风险</div>
+          </div>
+          <div class="h-tl-node" data-stage="review" data-date="2026-07-03">
+            <div class="h-tl-dot">📑</div>
+            <div class="h-tl-label">审查起诉</div>
+            <div class="h-tl-date">待移送</div>
+            <div class="h-tl-alert"></div>
+          </div>
+        </div>
+
+        <!-- 时间线详情弹出 -->
+        <div class="tl-detail-popup" id="timelineDetail"></div>
+      </div>
+
+      <!-- ========== 模块3：证据审查 + 模块4上（要素提取-案件） ========== -->
+      <div class="grid-2">
+        <!-- 模块3：证据审查 - 关系图 -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="module-title">🔗 证据关系审查</div>
+              <div class="module-subtitle">点击节点查看关联详情 · 当前案件 (2026)京公刑字0102号</div>
+            </div>
+            <button class="btn btn-outline btn-sm" id="btnResetGraph">🔄 重置视图</button>
+          </div>
+          <div class="relation-wrap">
+            <div class="relation-chart" id="relationChart"></div>
+            <div class="relation-detail" id="relationDetail">
+              <div class="rel-detail-placeholder">
+                <div style="font-size:36px;margin-bottom:8px;opacity:0.5;">👆</div>
+                点击图中节点<br>查看详细关联信息
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 模块4上半：要素提取 - 案件信息 -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="module-title">📋 要素提取</div>
+              <div class="module-subtitle">AI 自动提取 · 案件信息</div>
+            </div>
+            <span class="tag tag-success">自动提取</span>
+          </div>
+          <div class="element-grid">
+            <div class="element-card" data-elem="case-basic">
+              <div class="ec-icon">📌</div>
+              <div class="ec-title">案件基本信息</div>
+              <div class="ec-items">
+                <span>案号: (2026)京公刑字0102号</span>
+                <span>案由: 诈骗罪</span>
+                <span>立案日期: 2026-06-16</span>
+                <span>办案单位: 北京市公安局刑侦支队</span>
+              </div>
+            </div>
+            <div class="element-card" data-elem="suspect">
+              <div class="ec-icon">👤</div>
+              <div class="ec-title">嫌疑人信息</div>
+              <div class="ec-items">
+                <span>姓名: 张某</span>
+                <span>性别: 男 · 年龄: 35岁</span>
+                <span>身份证: 110101****1234</span>
+                <span>前科: 无</span>
+              </div>
+            </div>
+            <div class="element-card" data-elem="victim">
+              <div class="ec-icon">🫂</div>
+              <div class="ec-title">被害人信息</div>
+              <div class="ec-items">
+                <span>姓名: 李某</span>
+                <span>性别: 女 · 年龄: 42岁</span>
+                <span>诈骗金额: ¥326,000</span>
+                <span>报案日期: 2026-06-15</span>
+              </div>
+            </div>
+            <div class="element-card" data-elem="evidence">
+              <div class="ec-icon">🧾</div>
+              <div class="ec-title">涉案金额与关键证据</div>
+              <div class="ec-items">
+                <span>涉案总额: ¥326,000</span>
+                <span>银行流水: 已调取</span>
+                <span>微信记录: 已固定</span>
+                <span>合同文件: 3份</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 模块4下半：要素提取 - 人员详情 ========== -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="module-title">👥 人员要素详情</div>
+            <div class="module-subtitle">AI 自动提取 · 点击卡片查看完整信息</div>
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="element-card risk-strip high" data-elem="person-suspect" style="border-left:3px solid #EF4444;">
+            <div class="ec-icon">🔴</div>
+            <div class="ec-title">嫌疑人：张某</div>
+            <div class="ec-items">
+              <span>男 · 35岁 · 无业</span>
+              <span>住址: 北京市朝阳区XX路XX号</span>
+              <span>到案方式: 传唤到案</span>
+              <span>强制措施: 刑事拘留</span>
+              <span>辩护律师: 王律师 (盈科)</span>
+            </div>
+          </div>
+          <div class="element-card risk-strip low" data-elem="person-victim" style="border-left:3px solid #3B82F6;">
+            <div class="ec-icon">🔵</div>
+            <div class="ec-title">被害人：李某</div>
+            <div class="ec-items">
+              <span>女 · 42岁 · 公司职员</span>
+              <span>住址: 北京市海淀区XX小区</span>
+              <span>受损金额: ¥326,000</span>
+              <span>与嫌疑人关系: 网友</span>
+              <span>已出具谅解书: 否</span>
+            </div>
+          </div>
+          <div class="element-card risk-strip pass" data-elem="person-witness" style="border-left:3px solid #10B981;">
+            <div class="ec-icon">🟢</div>
+            <div class="ec-title">证人：王某</div>
+            <div class="ec-items">
+              <span>男 · 29岁 · 银行柜员</span>
+              <span>证言类型: 转账记录见证</span>
+              <span>证言状态: 已签字确认</span>
+              <span>联系方式: 138****5678</span>
+              <span>询问日期: 2026-06-20</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div><!-- /#reviewContent -->
+    </div>
+
+    <!-- ========== 页面4：报告导出 ========== -->
+    <div class="page" id="page-report">
+
+      <div class="grid-3">
+        <div class="report-template">
+          <div style="font-size:32px;margin-bottom:12px;">📋</div>
+          <div class="name">综合审查报告</div>
+          <div class="desc">生成包含全部审查项的综合报告，涵盖证据审查、程序审查、实体审查三个维度。</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">📄 模板：公安部标准格式 · ⏱️ 约30秒生成</div>
+          <div class="btn-group">
+            <button class="btn btn-primary btn-sm">📥 导出 Word</button>
+            <button class="btn btn-outline btn-sm">PDF</button>
+          </div>
+        </div>
+
+        <div class="report-template">
+          <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+          <div class="name">问题清单报告</div>
+          <div class="desc">列出AI审查发现的所有问题项，包含严重程度分级、法条依据及整改建议。</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">📄 模板：问题整改清单 · ⏱️ 约15秒生成</div>
+          <div class="btn-group">
+            <button class="btn btn-primary btn-sm">📥 导出 Word</button>
+            <button class="btn btn-outline btn-sm">PDF</button>
+          </div>
+        </div>
+
+        <div class="report-template">
+          <div style="font-size:32px;margin-bottom:12px;">📊</div>
+          <div class="name">统计分析报告</div>
+          <div class="desc">对审查数据进行多维度统计分析，包含图表和数据透视，适用于月度/季度汇报。</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">📄 模板：数据分析报表 · ⏱️ 约45秒生成</div>
+          <div class="btn-group">
+            <button class="btn btn-primary btn-sm">📥 导出 Excel</button>
+            <button class="btn btn-outline btn-sm">PDF</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📤 最近导出记录</div>
+            <div class="card-subtitle">近30天导出历史</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>报告名称</th><th>关联案件</th><th>类型</th><th>格式</th><th>导出时间</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>综合审查报告-李某寻衅滋事案</td>
+                <td>(2026)京公刑字0098号</td>
+                <td><span class="tag tag-info">综合报告</span></td>
+                <td>Word</td>
+                <td>2026-07-03 17:25</td>
+                <td><button class="btn btn-outline btn-sm">重新下载</button></td>
+              </tr>
+              <tr>
+                <td>问题清单-赵某故意伤害案</td>
+                <td>(2026)京公刑字0089号</td>
+                <td><span class="tag tag-warning">问题清单</span></td>
+                <td>PDF</td>
+                <td>2026-07-03 15:00</td>
+                <td><button class="btn btn-outline btn-sm">重新下载</button></td>
+              </tr>
+              <tr>
+                <td>2026年6月统计月报</td>
+                <td>—</td>
+                <td><span class="tag tag-default">统计报表</span></td>
+                <td>Excel</td>
+                <td>2026-07-01 09:00</td>
+                <td><button class="btn btn-outline btn-sm">重新下载</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 批量导出 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📦 批量导出</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <select style="background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;font-family:inherit;min-width:180px;">
+            <option>选择日期范围</option>
+            <option>最近7天</option>
+            <option>最近30天</option>
+            <option>本月</option>
+            <option>上月</option>
+          </select>
+          <select style="background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;font-family:inherit;min-width:180px;">
+            <option>选择报告类型</option>
+            <option>综合审查报告</option>
+            <option>问题清单报告</option>
+            <option>统计分析报告</option>
+          </select>
+          <select style="background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;font-family:inherit;min-width:140px;">
+            <option>导出格式</option>
+            <option>Word (.docx)</option>
+            <option>PDF</option>
+            <option>Excel (.xlsx)</option>
+          </select>
+          <button class="btn btn-primary">📦 开始批量导出</button>
+        </div>
+        <div class="empty-state">
+          <div class="icon">📭</div>
+          <div class="text">选择筛选条件后，点击"开始批量导出"生成报告</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.content -->
+</div><!-- /.main -->
+
+<!-- ==================== 导出报告弹窗 ==================== -->
+<div class="modal-overlay" id="exportModalOverlay">
+  <div class="modal" id="exportModal">
+    <div class="modal-header">
+      <div class="modal-title">📥 导出审查报告</div>
+      <button class="modal-close" id="btnModalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <!-- 步骤1：选择格式 -->
+      <div id="exportStep1">
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;">请选择导出格式：</div>
+        <div class="format-grid" id="formatGrid">
+          <div class="format-card selected" data-format="pdf">
+            <div class="fc-icon">📕</div>
+            <div class="fc-name">PDF 报告</div>
+            <div class="fc-desc">正式审查文书格式</div>
+          </div>
+          <div class="format-card" data-format="word">
+            <div class="fc-icon">📘</div>
+            <div class="fc-name">Word 文档</div>
+            <div class="fc-desc">可编辑的 .docx</div>
+          </div>
+          <div class="format-card" data-format="excel">
+            <div class="fc-icon">📗</div>
+            <div class="fc-name">Excel 表格</div>
+            <div class="fc-desc">问题清单 .xlsx</div>
+          </div>
+        </div>
+
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">报告内容：</div>
+        <label class="check-row"><input type="checkbox" checked> 审查体检总览</label>
+        <label class="check-row"><input type="checkbox" checked> 程序审查分析</label>
+        <label class="check-row"><input type="checkbox" checked> 证据关系审查</label>
+        <label class="check-row"><input type="checkbox" checked> 要素提取汇总</label>
+        <label class="check-row"><input type="checkbox"> 附AI原始分析数据</label>
+      </div>
+
+      <!-- 步骤2：导出进度 -->
+      <div class="export-progress" id="exportStep2">
+        <div class="ep-spinner"></div>
+        <div class="ep-text" id="epText">正在生成报告...</div>
+        <div class="ep-sub" id="epSub">收集审查数据</div>
+        <div class="ep-bar-wrap">
+          <div class="ep-bar-fill" id="epBar"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;" id="epPct">0%</div>
+      </div>
+
+      <!-- 步骤3：导出成功 -->
+      <div class="export-success" id="exportStep3">
+        <div class="es-icon">✅</div>
+        <div class="es-text" id="esText">报告导出成功</div>
+        <div class="es-sub" id="esSub">文件已保存至下载目录</div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary btn-sm" id="btnDownloadSim">📥 模拟下载</button>
+          <button class="btn btn-outline btn-sm" id="btnShareSim" style="margin-left:8px;">📋 复制链接</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" id="modalFooter">
+      <button class="btn btn-outline btn-sm" id="btnModalCancel">取消</button>
+      <button class="btn btn-primary" id="btnModalExport">🚀 开始导出</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 溯源抽屉（底部半屏） ==================== -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-handle" id="drawerHandle">
+    <div class="drawer-handle-bar"></div>
+  </div>
+  <div class="drawer-header">
+    <div class="dh-left">
+      <span style="font-size:24px;">🔍</span>
+      <div>
+        <div class="dh-title" id="drawerTitle">问题溯源</div>
+        <div class="dh-meta" id="drawerMeta">点击卷宗原文高亮区域可跳转定位</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-outline btn-sm" id="btnDrawerPrev">◀ 上一处</button>
+      <span style="font-size:11px;color:var(--text-muted);" id="drawerNavInfo">1/3</span>
+      <button class="btn btn-outline btn-sm" id="btnDrawerNext">下一处 ▶</button>
+      <button class="drawer-close" id="btnDrawerClose">✕</button>
+    </div>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-doc" id="drawerDoc">
+      <!-- 动态填充卷宗原文 -->
+    </div>
+    <div class="drawer-sidebar" id="drawerSidebar">
+      <!-- 动态填充问题摘要 -->
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ECharts CDN ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+
+<!-- ==================== 脚本 ==================== -->
+<script>
+(function() {
+
+  // ===== 导航切换 =====
+  var navItems = document.querySelectorAll('#sidebarNav .nav-item');
+  var pages = document.querySelectorAll('.page');
+  var breadcrumb = document.getElementById('breadcrumbCurrent');
+
+  var pageNames = {
+    overview: '案件总览',
+    dossier: '卷宗管理',
+    review: '审查中心',
+    report: '报告导出'
+  };
+
+  navItems.forEach(function(item) {
+    item.addEventListener('click', function() {
+      var page = this.getAttribute('data-page');
+
+      navItems.forEach(function(n) { n.classList.remove('active'); });
+      this.classList.add('active');
+
+      pages.forEach(function(p) { p.classList.remove('active'); });
+      var target = document.getElementById('page-' + page);
+      if (target) target.classList.add('active');
+
+      if (breadcrumb) {
+        breadcrumb.textContent = pageNames[page] || page;
+      }
+    });
+  });
+
+  // ===== 案件总览 Tab 切换（刑事/行政） =====
+  var overviewTabs = document.querySelectorAll('#overviewTabs .tab-btn');
+  overviewTabs.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var tabId = this.getAttribute('data-tab');
+      overviewTabs.forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+
+      document.querySelectorAll('#page-overview .tab-panel').forEach(function(p) {
+        p.classList.remove('active');
+      });
+      var panel = document.getElementById(tabId);
+      if (panel) panel.classList.add('active');
+    });
+  });
+
+  // ===== 实时时钟 =====
+  function updateClock() {
+    var now = new Date();
+    var str = now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(now.getDate()).padStart(2, '0') + ' ' +
+      String(now.getHours()).padStart(2, '0') + ':' +
+      String(now.getMinutes()).padStart(2, '0') + ':' +
+      String(now.getSeconds()).padStart(2, '0');
+    var el = document.getElementById('clock');
+    if (el) el.textContent = str;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ===== 卷宗上传模拟 =====
+  var uploadCard = document.getElementById('uploadCard');
+  var uploadZone = document.getElementById('uploadZone');
+  var uploadQueue = document.getElementById('uploadQueue');
+  var fileInput = document.getElementById('fileInput');
+  var btnUpload = document.getElementById('btnUpload');
+  var btnCancelUpload = document.getElementById('btnCancelUpload');
+  var btnSimUpload = document.getElementById('btnSimUpload');
+  var btnStartOCR = document.getElementById('btnStartOCR');
+  var ocrPanel = document.getElementById('ocrPanel');
+
+  var pendingFiles = [];
+
+  // 模拟文件数据
+  var mockFiles = [
+    { name: '讯问笔录(第三次).pdf', size: '3.2 MB', icon: '📄' },
+    { name: '现场勘验检查笔录.docx', size: '1.8 MB', icon: '📝' },
+    { name: '证人辨认照片组.jpg', size: '6.5 MB', icon: '🖼️' },
+    { name: '电子数据取证报告.pdf', size: '4.1 MB', icon: '📄' },
+    { name: '扣押物品清单扫描件.pdf', size: '2.3 MB', icon: '📄' },
+    { name: '涉案账户交易流水.xlsx', size: '0.9 MB', icon: '📊' },
+    { name: '通话记录分析报告.docx', size: '1.5 MB', icon: '📝' },
+    { name: '伤情照片(5张).zip', size: '12.8 MB', icon: '📦' }
+  ];
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  }
+
+  function pickRandom(arr, n) {
+    var copy = arr.slice();
+    var result = [];
+    n = Math.min(n, copy.length);
+    for (var i = 0; i < n; i++) {
+      var idx = Math.floor(Math.random() * copy.length);
+      result.push(copy.splice(idx, 1)[0]);
+    }
+    return result;
+  }
+
+  // 显示上传区域
+  if (btnUpload) {
+    btnUpload.addEventListener('click', function() {
+      uploadCard.style.display = 'block';
+      btnUpload.style.display = 'none';
+      btnStartOCR.style.display = 'inline-flex';
+      pendingFiles = [];
+      uploadQueue.innerHTML = '';
+      uploadQueue.classList.remove('visible');
+      btnSimUpload.style.display = 'none';
+    });
+  }
+
+  // 取消上传
+  if (btnCancelUpload) {
+    btnCancelUpload.addEventListener('click', function() {
+      uploadCard.style.display = 'none';
+      btnUpload.style.display = 'inline-flex';
+      btnStartOCR.style.display = 'none';
+      pendingFiles = [];
+      uploadQueue.innerHTML = '';
+      uploadQueue.classList.remove('visible');
+      btnSimUpload.style.display = 'none';
+    });
+  }
+
+  // 点击上传区域 → 弹出文件选择
+  if (uploadZone) {
+    uploadZone.addEventListener('click', function() {
+      fileInput.click();
+    });
+  }
+
+  // 拖拽模拟
+  if (uploadZone) {
+    uploadZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      uploadZone.classList.add('drag-over');
+    });
+    uploadZone.addEventListener('dragleave', function() {
+      uploadZone.classList.remove('drag-over');
+    });
+    uploadZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      uploadZone.classList.remove('drag-over');
+      addMockFiles();
+    });
+  }
+
+  // 文件选择变化
+  if (fileInput) {
+    fileInput.addEventListener('change', function() {
+      addMockFiles();
+      fileInput.value = '';
+    });
+  }
+
+  function addMockFiles() {
+    var picked = pickRandom(mockFiles, 2 + Math.floor(Math.random() * 3));
+    picked.forEach(function(f) {
+      pendingFiles.push(f);
+    });
+    renderUploadQueue();
+  }
+
+  function renderUploadQueue() {
+    var html = '';
+    pendingFiles.forEach(function(f, i) {
+      html += '<div class="upload-queue-item">' +
+        '<span class="q-icon">' + f.icon + '</span>' +
+        '<span class="q-name">' + f.name + '</span>' +
+        '<span class="q-size">' + f.size + '</span>' +
+        '<button class="q-remove" data-idx="' + i + '" title="移除">✕</button>' +
+        '</div>';
+    });
+    uploadQueue.innerHTML = html;
+    uploadQueue.classList.add('visible');
+
+    if (pendingFiles.length > 0) {
+      btnSimUpload.style.display = 'inline-flex';
+    } else {
+      btnSimUpload.style.display = 'none';
+    }
+
+    // 移除按钮事件
+    uploadQueue.querySelectorAll('.q-remove').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var idx = parseInt(this.getAttribute('data-idx'));
+        pendingFiles.splice(idx, 1);
+        renderUploadQueue();
+      });
+    });
+  }
+
+  // 确认上传（模拟）
+  if (btnSimUpload) {
+    btnSimUpload.addEventListener('click', function() {
+      if (pendingFiles.length === 0) return;
+      // 隐藏上传卡片，显示OCR面板
+      uploadCard.style.display = 'none';
+      btnUpload.style.display = 'inline-flex';
+      btnStartOCR.style.display = 'none';
+      startOCRSimulation(pendingFiles.slice());
+      pendingFiles = [];
+      uploadQueue.innerHTML = '';
+      uploadQueue.classList.remove('visible');
+      btnSimUpload.style.display = 'none';
+    });
+  }
+
+  // "开始OCR解析"按钮
+  if (btnStartOCR) {
+    btnStartOCR.addEventListener('click', function() {
+      if (pendingFiles.length === 0) {
+        // 如果没有待上传文件，用默认模拟文件
+        var defaultFiles = pickRandom(mockFiles, 4);
+        startOCRSimulation(defaultFiles);
+        uploadCard.style.display = 'none';
+        btnUpload.style.display = 'inline-flex';
+        btnStartOCR.style.display = 'none';
+      } else {
+        uploadCard.style.display = 'none';
+        btnUpload.style.display = 'inline-flex';
+        btnStartOCR.style.display = 'none';
+        startOCRSimulation(pendingFiles.slice());
+        pendingFiles = [];
+        uploadQueue.innerHTML = '';
+        uploadQueue.classList.remove('visible');
+        btnSimUpload.style.display = 'none';
+      }
+    });
+  }
+
+  function startOCRSimulation(files) {
+    ocrPanel.classList.add('visible');
+    var ocrFileList = document.getElementById('ocrFileList');
+    var ocrStatus = document.getElementById('ocrStatus');
+    var ocrOverall = document.getElementById('ocrOverall');
+
+    // 构建文件列表HTML
+    var html = '';
+    files.forEach(function(f, i) {
+      var id = 'ocr-progress-' + i;
+      html += '<div class="ocr-file-row" id="ocr-row-' + i + '">' +
+        '<span class="ocr-file-icon">' + f.icon + '</span>' +
+        '<div class="ocr-file-info">' +
+          '<div class="ocr-file-name">' + f.name + '</div>' +
+          '<div class="ocr-file-meta">' + f.size + ' · 页数: ' + (3 + Math.floor(Math.random() * 30)) + '</div>' +
+        '</div>' +
+        '<div class="ocr-progress-wrap">' +
+          '<div class="progress-bar"><div class="progress-fill blue" id="' + id + '" style="width:0%;"></div></div>' +
+          '<span class="progress-pct" id="' + id + '-pct">0%</span>' +
+        '</div>' +
+        '<span class="ocr-pending" id="ocr-icon-' + i + '">⏳</span>' +
+        '</div>';
+    });
+    ocrFileList.innerHTML = html;
+    ocrStatus.textContent = '解析中...';
+    ocrStatus.className = 'ocr-status tag tag-info';
+    ocrOverall.textContent = '正在初始化OCR引擎...';
+
+    // 逐个文件模拟进度
+    var completedCount = 0;
+    files.forEach(function(f, i) {
+      simulateFileOCR(i, files.length, function() {
+        completedCount++;
+        if (completedCount >= files.length) {
+          onAllOCRComplete(files);
+        }
+      });
+    });
+  }
+
+  function simulateFileOCR(index, total, onDone) {
+    var progressBar = document.getElementById('ocr-progress-' + index);
+    var progressPct = document.getElementById('ocr-progress-' + index + '-pct');
+    var ocrIcon = document.getElementById('ocr-icon-' + index);
+    var ocrOverall = document.getElementById('ocrOverall');
+
+    var pct = 0;
+    var speed = 3 + Math.random() * 12; // 每次增长百分比
+
+    var timer = setInterval(function() {
+      pct += speed;
+      if (pct >= 100) {
+        pct = 100;
+        clearInterval(timer);
+        if (progressBar) progressBar.style.width = '100%';
+        if (progressBar) progressBar.classList.remove('blue');
+        if (progressBar) progressBar.classList.add('green');
+        if (progressPct) progressPct.textContent = '100%';
+        if (ocrIcon) {
+          ocrIcon.textContent = '✅';
+          ocrIcon.classList.remove('ocr-pending');
+          ocrIcon.classList.add('ocr-done');
+        }
+        if (ocrOverall) ocrOverall.textContent = '文件 ' + (index + 1) + '/' + total + ' 解析完成';
+        if (onDone) onDone();
+      } else {
+        if (progressBar) progressBar.style.width = Math.round(pct) + '%';
+        if (progressPct) progressPct.textContent = Math.round(pct) + '%';
+        if (ocrOverall) ocrOverall.textContent = '正在解析: 文件 ' + (index + 1) + '/' + total + ' (' + Math.round(pct) + '%)';
+      }
+    }, 200 + Math.random() * 400);
+  }
+
+  function onAllOCRComplete(files) {
+    var ocrStatus = document.getElementById('ocrStatus');
+    var ocrOverall = document.getElementById('ocrOverall');
+    ocrStatus.textContent = '解析完成';
+    ocrStatus.className = 'ocr-status tag tag-success';
+    ocrOverall.textContent = '全部 ' + files.length + ' 个文件OCR解析完毕，共识别 12,580 个字符，已加入卷宗列表';
+
+    // 将新文件添加到卷宗列表和最近导入
+    addToDossierList(files);
+    addToRecentFiles(files);
+  }
+
+  function addToDossierList(files) {
+    var tbody = document.getElementById('dossierTableBody');
+    if (!tbody) return;
+    var now = new Date();
+    var nowStr = now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(now.getDate()).padStart(2, '0') + ' ' +
+      String(now.getHours()).padStart(2, '0') + ':' +
+      String(now.getMinutes()).padStart(2, '0');
+    var caseNums = ['0105', '0106', '0107', '0108', '0109', '0110', '0111', '0112'];
+    var caseNames = ['刘某涉嫌盗窃案', '某公司涉嫌非法集资案', '黄某故意毁坏财物案', '周某寻衅滋事案', '某网吧违规经营案', '郑某交通肇事案', '吴某贩卖毒品案', '某物业公司违规案'];
+    var types = ['侦查卷', '侦查卷', '诉讼卷', '侦查卷', '补充侦查卷', '侦查卷', '侦查卷', '补充侦查卷'];
+
+    files.forEach(function(f) {
+      var idx = Math.floor(Math.random() * caseNums.length);
+      var tr = document.createElement('tr');
+      tr.style.background = 'rgba(27,127,229,0.06)';
+      tr.innerHTML = '<td>(2026)京公刑字0' + caseNums[idx] + '号</td>' +
+        '<td>' + caseNames[idx] + '</td>' +
+        '<td><span class="tag tag-default">' + types[idx] + '</span></td>' +
+        '<td>' + (8 + Math.floor(Math.random() * 200)) + '</td>' +
+        '<td><span class="tag tag-info">处理中</span></td>' +
+        '<td>李正阳</td>' +
+        '<td>' + nowStr + '</td>' +
+        '<td><button class="btn btn-outline btn-sm">打开</button></td>';
+      tbody.insertBefore(tr, tbody.firstChild);
+    });
+
+    // 更新计数
+    updateDossierCount(files.length);
+  }
+
+  function addToRecentFiles(files) {
+    var container = document.getElementById('recentFiles');
+    if (!container) return;
+    var nowStr = (new Date()).getFullYear() + '-' +
+      String((new Date()).getMonth() + 1).padStart(2, '0') + '-' +
+      String((new Date()).getDate()).padStart(2, '0');
+
+    files.forEach(function(f) {
+      var div = document.createElement('div');
+      div.className = 'file-item';
+      div.innerHTML = '<span class="file-icon">' + f.icon + '</span>' +
+        '<div class="file-info">' +
+          '<div class="file-name">' + f.name + '</div>' +
+          '<div class="file-size">' + f.size + ' · OCR已识别 · ' + nowStr + '</div>' +
+        '</div>' +
+        '<span class="tag tag-info">新增</span>';
+      container.insertBefore(div, container.firstChild);
+    });
+  }
+
+  function updateDossierCount(addCount) {
+    var el1 = document.getElementById('dossierCount');
+    var el2 = document.getElementById('dossierCount2');
+    if (el1) {
+      var cur = parseInt(el1.textContent) || 48;
+      el1.textContent = cur + addCount;
+    }
+    if (el2) {
+      var cur2 = parseInt(el2.textContent) || 48;
+      el2.textContent = cur2 + addCount;
+    }
+  }
+
+  // ============================================================
+  // ===== 审查中心 —— 状态管理 =====
+  // ============================================================
+  var reviewState = {
+    activeRiskFilter: null,       // 当前风险筛选 (null=全部, 'high','medium','low','pass')
+    selectedProblemId: null,      // 当前选中的问题ID
+    selectedTimelineStage: null,  // 当前选中的时间线阶段
+    selectedGraphNode: null,      // 当前选中的图谱节点
+    drawerOpen: false,            // 溯源抽屉是否打开
+    drawerProblemId: null,        // 抽屉中展示的问题ID
+    highlightIndex: 0,            // 当前高亮跳转索引
+    totalHighlights: 0            // 总高亮数
+  };
+
+  // 页面状态快照（用于Tab切换恢复）
+  var pageSnapshots = {};
+
+  function saveSnapshot() {
+    pageSnapshots['review'] = {
+      riskFilter: reviewState.activeRiskFilter,
+      problemId: reviewState.selectedProblemId,
+      timelineStage: reviewState.selectedTimelineStage,
+      graphNode: reviewState.selectedGraphNode,
+      drawerOpen: reviewState.drawerOpen,
+      drawerProblemId: reviewState.drawerProblemId
+    };
+  }
+
+  function restoreSnapshot() {
+    var snap = pageSnapshots['review'];
+    if (!snap) return;
+    reviewState.activeRiskFilter = snap.riskFilter;
+    reviewState.selectedProblemId = snap.problemId;
+    reviewState.selectedTimelineStage = snap.timelineStage;
+    reviewState.selectedGraphNode = snap.graphNode;
+    reviewState.drawerOpen = snap.drawerOpen;
+    reviewState.drawerProblemId = snap.drawerProblemId;
+
+    // 恢复UI状态
+    if (snap.problemId) {
+      document.querySelectorAll('#problemList .problem-item').forEach(function(p) {
+        p.classList.toggle('active', p.getAttribute('data-pid') === snap.problemId);
+      });
+    }
+    if (snap.riskFilter) {
+      filterProblemList(snap.riskFilter);
+    }
+    if (snap.drawerOpen && snap.drawerProblemId) {
+      openDrawer(snap.drawerProblemId, true);
+    }
+  }
+
+  // ============================================================
+  // ===== 审查中心 —— 模块1：卷宗体检总览（ECharts环形图） =====
+  // ============================================================
+  var riskChart = null;
+  var relationChart = null;
+
+  function initRiskDonut() {
+    var dom = document.getElementById('riskDonutChart');
+    if (!dom) return;
+    // 如果已存在实例，先 dispose
+    if (riskChart) { riskChart.dispose(); riskChart = null; }
+
+    riskChart = echarts.init(dom);
+
+    var option = {
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: 'rgba(15,31,58,0.95)',
+        borderColor: '#1A3360',
+        textStyle: { color: '#E2E8F0', fontSize: 12 },
+        formatter: function(p) {
+          return p.seriesName + '<br/><strong>' + p.name + '</strong>: ' + p.value + ' 项 (' + p.percent + '%)';
+        }
+      },
+      legend: { show: false },
+      series: [
+        {
+          name: '风险分布',
+          type: 'pie',
+          radius: ['55%', '80%'],
+          center: ['50%', '50%'],
+          avoidLabelOverlap: false,
+          itemStyle: {
+            borderRadius: 6,
+            borderColor: '#0F1F3A',
+            borderWidth: 4
+          },
+          label: {
+            show: true,
+            position: 'center',
+            formatter: function() { return '{total|29}\n{unit|审查项}'; },
+            rich: {
+              total: { fontSize: 28, fontWeight: 'bold', color: '#fff', lineHeight: 32 },
+              unit: { fontSize: 12, color: '#94A3B8', lineHeight: 20 }
+            }
+          },
+          emphasis: {
+            label: { show: true, fontSize: 16, fontWeight: 'bold' },
+            scaleSize: 8
+          },
+          data: [
+            { value: 3, name: '高风险', itemStyle: { color: '#EF4444' } },
+            { value: 5, name: '中风险', itemStyle: { color: '#F59E0B' } },
+            { value: 4, name: '低风险', itemStyle: { color: '#3B82F6' } },
+            { value: 17, name: '合规', itemStyle: { color: '#10B981' } }
+          ]
+        }
+      ]
+    };
+
+    riskChart.setOption(option);
+
+    // 点击环形图扇区 → 筛选问题列表
+    riskChart.on('click', function(params) {
+      var riskMap = { '高风险': 'high', '中风险': 'medium', '低风险': 'low', '合规': 'pass' };
+      var sev = riskMap[params.name];
+      filterProblemList(sev);
+    });
+
+    // Resize 处理
+    window.addEventListener('resize', function() {
+      if (riskChart) riskChart.resize();
+    });
+  }
+
+  // 问题列表筛选
+  function filterProblemList(severity) {
+    var items = document.querySelectorAll('#problemList .problem-item');
+    var anyVisible = false;
+    items.forEach(function(item) {
+      if (!severity || item.getAttribute('data-sev') === severity) {
+        item.style.display = 'flex';
+        anyVisible = true;
+      } else {
+        item.style.display = 'none';
+      }
+    });
+    // 高亮对应图例
+    document.querySelectorAll('.donut-legend-item').forEach(function(leg) {
+      leg.style.opacity = (!severity || leg.getAttribute('data-risk') === severity) ? '1' : '0.4';
+    });
+  }
+
+  // 图例点击 → 联动筛选
+  document.querySelectorAll('.donut-legend-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      var risk = this.getAttribute('data-risk');
+      // 如果当前已筛选，点击同一项取消筛选
+      var active = this.style.opacity === '0.4' ? false : true;
+      var currentFilter = document.querySelector('.donut-legend-item[style*="opacity: 0.4"]');
+      if (currentFilter) {
+        // 取消所有筛选
+        document.querySelectorAll('.donut-legend-item').forEach(function(l) { l.style.opacity = '1'; });
+        filterProblemList(null);
+      } else {
+        filterProblemList(risk);
+      }
+      // 同时触发环形图高亮
+      if (riskChart) {
+        riskChart.dispatchAction({ type: active ? 'downplay' : 'highlight', seriesIndex: 0 });
+      }
+    });
+  });
+
+  // 问题列表点击 → 打开溯源抽屉
+  document.querySelectorAll('#problemList .problem-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      var pid = this.getAttribute('data-pid');
+
+      // 激活状态
+      document.querySelectorAll('#problemList .problem-item').forEach(function(p) { p.classList.remove('active'); });
+      this.classList.add('active');
+      reviewState.selectedProblemId = pid;
+
+      // 关闭内联详情面板（改用抽屉）
+      document.getElementById('problemDetail').classList.remove('visible');
+
+      // 打开溯源抽屉
+      openDrawer(pid, false);
+      addRipple(this, e);
+    });
+  });
+
+  // 重新体检按钮
+  var btnRefresh = document.getElementById('btnRefreshCheckup');
+  if (btnRefresh) {
+    btnRefresh.addEventListener('click', function() {
+      this.textContent = '⏳ 体检中...';
+      this.disabled = true;
+      // 模拟重新加载
+      setTimeout(function() {
+        if (riskChart) {
+          riskChart.setOption({
+            series: [{
+              data: [
+                { value: 2, name: '高风险', itemStyle: { color: '#EF4444' } },
+                { value: 4, name: '中风险', itemStyle: { color: '#F59E0B' } },
+                { value: 5, name: '低风险', itemStyle: { color: '#3B82F6' } },
+                { value: 18, name: '合规', itemStyle: { color: '#10B981' } }
+              ]
+            }]
+          });
+        }
+        btnRefresh.textContent = '🔄 重新体检';
+        btnRefresh.disabled = false;
+        document.getElementById('problemDetail').classList.remove('visible');
+        document.querySelectorAll('#problemList .problem-item').forEach(function(p) { p.classList.remove('active'); });
+        filterProblemList(null);
+      }, 1200);
+    });
+  }
+
+  // 导出报告按钮
+  var btnExport = document.getElementById('btnExportCheckup');
+  if (btnExport) {
+    btnExport.addEventListener('click', function() {
+      var orig = this.textContent;
+      this.textContent = '✅ 已导出';
+      this.style.background = '#10B981';
+      this.style.borderColor = '#10B981';
+      setTimeout(function() {
+        btnExport.textContent = orig;
+        btnExport.style.background = '';
+        btnExport.style.borderColor = '';
+      }, 2000);
+    });
+  }
+
+  // ============================================================
+  // ===== 审查中心 —— 模块2：程序审查（横向时间线） =====
+  // ============================================================
+  var timelineNodes = document.querySelectorAll('#procTimeline .h-tl-node');
+  var timelineBadge = document.getElementById('procTimelineBadge');
+  var timelineDetail = document.getElementById('timelineDetail');
+
+  // 检查时间冲突（立案和侦查同一天 → 模拟冲突）
+  if (timelineBadge) {
+    var conflictCount = document.querySelectorAll('#procTimeline .h-tl-node.conflict').length;
+    if (conflictCount > 0) {
+      timelineBadge.innerHTML = '<span class="tag tag-danger">⚠ ' + conflictCount + ' 处时间异常</span>';
+    }
+  }
+
+  var stageDetails = {
+    acceptance: {
+      title: '受案阶段',
+      date: '2026-06-15',
+      doc: '受案登记表（京公刑受字[2026]第0102号）',
+      officer: '办案人：陈警官',
+      summary: '被害人李某于2026年6月15日到北京市公安局刑侦支队报案，称被张某以投资理财名义诈骗人民币32.6万元。接警后制作受案登记表并出具受案回执。',
+      status: 'normal'
+    },
+    filing: {
+      title: '立案阶段',
+      date: '2026-06-16',
+      doc: '立案决定书（京公刑立字[2026]第0102号）',
+      officer: '审批人：刘支队长',
+      summary: '经初查，张某虚构投资理财项目骗取李某32.6万元，涉嫌诈骗罪。符合立案条件，于2026年6月16日经批准立案侦查。',
+      status: 'normal'
+    },
+    investigation: {
+      title: '侦查阶段',
+      date: '2026-06-16 ~ 2026-07-02',
+      doc: '侦查卷（讯问笔录×3、询问笔录×5、银行流水、微信聊天记录、扣押清单）',
+      officer: '主办侦查员：李警官',
+      summary: '侦查期间共讯问嫌疑人3次、询问证人5人、调取银行流水12份、固定电子数据3GB。扣押涉案手机1部、银行卡3张。',
+      status: 'normal'
+    },
+    arrest: {
+      title: '拘留/逮捕阶段 ⚠️',
+      date: '2026-07-02',
+      doc: '拘留证（京公刑拘字[2026]第0102号）',
+      officer: '审批人：刘支队长',
+      summary: '⚠️ 程序异常：刑事拘留延长至30日，缺少上一级人民检察院批准文书。根据《刑事诉讼法》第89条，延长至30日需经上一级检察院批准。当前卷宗中未见该批准文件。',
+      status: 'conflict'
+    },
+    review: {
+      title: '审查起诉阶段',
+      date: '待移送',
+      doc: '—',
+      officer: '—',
+      summary: '当前案件仍在侦查阶段，尚未移送检察院审查起诉。预计侦查终结后，将制作起诉意见书连同案卷材料移送检察院。',
+      status: 'pending'
+    }
+  };
+
+  timelineNodes.forEach(function(node) {
+    node.addEventListener('click', function(e) {
+      // 移除所有active
+      timelineNodes.forEach(function(n) { n.classList.remove('active-node'); });
+      this.classList.add('active-node');
+
+      var stage = this.getAttribute('data-stage');
+      reviewState.selectedTimelineStage = stage;
+
+      var detail = stageDetails[stage];
+      if (!detail) return;
+
+      // 如果是冲突节点，联动问题列表高亮对应问题
+      if (detail.status === 'conflict') {
+        document.querySelectorAll('#problemList .problem-item').forEach(function(p) { p.classList.remove('active'); });
+        // 关联拘留超期问题（pid=3）
+        var linkedProblem = document.querySelector('#problemList .problem-item[data-pid="3"]');
+        if (linkedProblem) {
+          linkedProblem.classList.add('active');
+          linkedProblem.classList.add('linked-highlight');
+          setTimeout(function() { linkedProblem.classList.remove('linked-highlight'); }, 2000);
+        }
+      }
+
+      var statusTag = '';
+      if (detail.status === 'conflict') {
+        statusTag = '<span class="tag tag-danger">⚠ 程序异常</span>';
+      } else if (detail.status === 'pending') {
+        statusTag = '<span class="tag tag-default">待进行</span>';
+      } else {
+        statusTag = '<span class="tag tag-success">✓ 合规</span>';
+      }
+
+      timelineDetail.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:start;">' +
+          '<div style="font-weight:600;color:#fff;font-size:14px;">📅 ' + detail.title + '</div>' +
+          statusTag +
+        '</div>' +
+        '<div style="margin-top:8px;font-size:12px;color:var(--text-secondary);line-height:1.7;">' +
+          '<div>📄 文书：' + detail.doc + '</div>' +
+          '<div>👮 ' + detail.officer + '</div>' +
+          '<div style="margin-top:6px;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px;">' + detail.summary + '</div>' +
+          (detail.status === 'conflict' ? '<div style="margin-top:6px;"><button class="drawer-nav-btn" onclick="document.querySelector(\'#problemList .problem-item[data-pid=3]\').click()">🔍 查看关联问题 → 拘留期限超期风险</button></div>' : '') +
+        '</div>';
+
+      timelineDetail.classList.add('visible');
+      addRipple(this, e);
+    });
+  });
+
+  // ============================================================
+  // ===== 审查中心 —— 模块3：证据审查（ECharts 关系图） =====
+  // ============================================================
+  var relationData = {
+    suspect: {
+      name: '张某（嫌疑人）',
+      desc: '男 · 35岁 · 无业 · 涉嫌诈骗罪',
+      relations: [
+        { target: '李某（被害人）', type: '诈骗', detail: '虚构投资理财项目，骗取¥326,000' },
+        { target: '王某（证人/银行柜员）', type: '银行记录', detail: '见证张某账户收到李某转账共5笔' },
+        { target: '某投资公司账户', type: '资金流向', detail: '赃款部分转入该公司账户（已冻结）' },
+        { target: '涉案手机（物证）', type: '持有', detail: 'iPhone 14 Pro · 含微信聊天记录 · 已扣押' }
+      ]
+    },
+    victim: {
+      name: '李某（被害人）',
+      desc: '女 · 42岁 · 公司职员',
+      relations: [
+        { target: '张某（嫌疑人）', type: '被诈骗', detail: '通过微信认识，被骗¥326,000' },
+        { target: '微信聊天记录', type: '提供证据', detail: '完整的微信聊天记录截图 · 已固定' },
+        { target: '银行流水', type: '转账记录', detail: '5笔转账共计¥326,000 · 已调取' }
+      ]
+    },
+    witness1: {
+      name: '王某（证人·银行柜员）',
+      desc: '男 · 29岁 · 银行柜员',
+      relations: [
+        { target: '张某（嫌疑人）', type: '业务办理', detail: '为张某办理涉案银行卡开户及大额转账' },
+        { target: '李某（被害人）', type: '业务办理', detail: '见证李某向张某账户转账' },
+        { target: '银行流水', type: '提供证据', detail: '提供涉案账户近6个月交易流水' }
+      ]
+    },
+    witness2: {
+      name: '赵某（证人·保安）',
+      desc: '男 · 45岁 · 银行保安',
+      relations: [
+        { target: '张某（嫌疑人）', type: '目击', detail: '案发当日下午2:40左右看到张某与李某在银行门口' },
+        { target: '李某（被害人）', type: '目击', detail: '看到李某与张某一同进入银行大厅' }
+      ]
+    },
+    evidence: {
+      name: '涉案手机（物证）',
+      desc: 'iPhone 14 Pro · 已扣押 · 已提取电子数据',
+      relations: [
+        { target: '张某（嫌疑人）', type: '所有人', detail: '手机持有人为张某，含诈骗相关微信记录' },
+        { target: '微信聊天记录', type: '存储', detail: '存储完整的诈骗过程微信聊天记录' }
+      ]
+    },
+    bank: {
+      name: '银行流水',
+      desc: '中国工商银行 · 账号 6222****1234',
+      relations: [
+        { target: '李某（被害人）', type: '付款记录', detail: '5笔转出共计¥326,000' },
+        { target: '张某（嫌疑人）', type: '收款记录', detail: '5笔入账共计¥326,000' }
+      ]
+    },
+    wechat: {
+      name: '微信聊天记录',
+      desc: '已固定电子数据 · 共2,340条消息',
+      relations: [
+        { target: '张某（嫌疑人）', type: '发送者', detail: '虚构投资回报、催促转账' },
+        { target: '李某（被害人）', type: '接收者', detail: '接收虚假投资信息并转账' }
+      ]
+    }
+  };
+
+  function initRelationGraph() {
+    var dom = document.getElementById('relationChart');
+    if (!dom) {
+      console.error('[initRelationGraph] FATAL: #relationChart DOM not found');
+      return;
+    }
+
+    // 销毁旧实例
+    if (relationChart) {
+      try { relationChart.dispose(); } catch(e) {}
+      relationChart = null;
+    }
+
+    // ===== 强制获取容器尺寸 =====
+    var rect = dom.getBoundingClientRect();
+    var w = rect.width  || 600;
+    var h = rect.height || 450;
+    console.log('[initRelationGraph] container size:', w + 'x' + h,
+                '| display:', window.getComputedStyle(dom).display,
+                '| visibility:', window.getComputedStyle(dom).visibility);
+
+    if (w < 10 || h < 10) {
+      console.error('[initRelationGraph] FATAL: container has zero/near-zero dimensions (' + w + 'x' + h + '). ' +
+                    'Parent #reviewContent display=' + window.getComputedStyle(dom.parentElement).display +
+                    '. Forcing minimum 600x450.');
+      // 强制设置内联尺寸作为兜底
+      dom.style.width  = '600px';
+      dom.style.height = '450px';
+      w = 600; h = 450;
+    }
+
+    // ===== 初始化 ECharts（传入显式尺寸，不依赖 auto） =====
+    relationChart = echarts.init(dom, null, {
+      width: w,
+      height: h,
+      devicePixelRatio: window.devicePixelRatio || 1
+    });
+    console.log('[initRelationGraph] echarts.init done');
+
+    // ===== 节点数据 =====
+    // 1个嫌疑人 + 1个被害人 + 1个证人 + 4个证据节点 = 7个节点
+    var nodes = [
+      { id: 'suspect',  name: '张某\n（嫌疑人）', symbolSize: 54, itemStyle: { color: '#EF4444', shadowBlur: 14, shadowColor: 'rgba(239,68,68,0.5)' }, category: 0 },
+      { id: 'victim',   name: '李某\n（被害人）', symbolSize: 46, itemStyle: { color: '#3B82F6', shadowBlur: 10, shadowColor: 'rgba(59,130,246,0.45)' }, category: 1 },
+      { id: 'witness1', name: '王某\n（证人·银行）', symbolSize: 38, itemStyle: { color: '#10B981', shadowBlur: 8, shadowColor: 'rgba(16,185,129,0.4)' }, category: 2 },
+      { id: 'witness2', name: '赵某\n（证人·保安）', symbolSize: 36, itemStyle: { color: '#10B981', shadowBlur: 6, shadowColor: 'rgba(16,185,129,0.35)' }, category: 2 },
+      { id: 'evidence', name: '涉案手机',          symbolSize: 32, itemStyle: { color: '#F59E0B' }, category: 3 },
+      { id: 'bank',     name: '银行流水',          symbolSize: 32, itemStyle: { color: '#8B5CF6' }, category: 3 },
+      { id: 'wechat',   name: '微信记录',          symbolSize: 30, itemStyle: { color: '#EC4899' }, category: 3 }
+    ];
+
+    // ===== 边数据 =====
+    // 至少 3 条关系边
+    var links = [
+      { source: 'suspect',  target: 'victim',   label: { show: true, formatter: '诈骗 ¥32.6万', fontSize: 10, color: '#EF4444', fontWeight: 600 }, lineStyle: { color: '#EF4444', width: 2, curveness: 0.15 } },
+      { source: 'suspect',  target: 'witness1', label: { show: true, formatter: '办理转账', fontSize: 10, color: '#94A3B8' }, lineStyle: { color: '#F59E0B', curveness: 0.1 } },
+      { source: 'suspect',  target: 'witness2', label: { show: true, formatter: '案发当日接触', fontSize: 10, color: '#94A3B8' }, lineStyle: { color: '#F59E0B', curveness: -0.12 } },
+      { source: 'suspect',  target: 'evidence', label: { show: true, formatter: '持有', fontSize: 10, color: '#94A3B8' }, lineStyle: { color: '#F59E0B', curveness: -0.1 } },
+      { source: 'suspect',  target: 'bank',     label: { show: true, formatter: '收款5笔', fontSize: 10, color: '#10B981' }, lineStyle: { color: '#10B981', curveness: 0.1 } },
+      { source: 'suspect',  target: 'wechat',   label: { show: true, formatter: '发送消息', fontSize: 10, color: '#94A3B8' }, lineStyle: { color: '#EC4899', curveness: -0.1 } },
+      { source: 'victim',   target: 'bank',     label: { show: true, formatter: '转账5笔', fontSize: 10, color: '#10B981', fontWeight: 500 }, lineStyle: { color: '#10B981', width: 2, curveness: 0.15 } },
+      { source: 'victim',   target: 'wechat',   label: { show: true, formatter: '提供截图', fontSize: 10, color: '#94A3B8' }, lineStyle: { color: '#EC4899', curveness: -0.15 } },
+      { source: 'victim',   target: 'witness2', label: { show: true, formatter: '辨认', fontSize: 10, color: '#94A3B8' }, lineStyle: { color: '#94A3B8', curveness: 0.1 } },
+      { source: 'witness1', target: 'bank',     label: { show: true, formatter: '调取流水', fontSize: 10, color: '#94A3B8' }, lineStyle: { color: '#8B5CF6', curveness: 0.15 } },
+      { source: 'witness2', target: 'victim',   label: { show: true, formatter: '目击', fontSize: 10, color: '#94A3B8' }, lineStyle: { color: '#94A3B8', curveness: 0.1 } }
+    ];
+
+    console.log('[initRelationGraph] nodes:', nodes.length, 'links:', links.length);
+
+    if (nodes.length === 0) {
+      console.error('[initRelationGraph] FATAL: nodes array is empty!');
+      dom.innerHTML = '<div style="color:#EF4444;text-align:center;padding:60px;">⚠ 图谱数据为空，无法渲染</div>';
+      return;
+    }
+
+    // ===== 类别 =====
+    var categories = [
+      { name: '嫌疑人', itemStyle: { color: '#EF4444' } },
+      { name: '被害人', itemStyle: { color: '#3B82F6' } },
+      { name: '证人',   itemStyle: { color: '#10B981' } },
+      { name: '证据',   itemStyle: { color: '#8B5CF6' } }
+    ];
+
+    // ===== 构建 option =====
+    var option = {
+      tooltip: {
+        show: true,
+        trigger: 'item',
+        backgroundColor: 'rgba(15,31,58,0.95)',
+        borderColor: '#1A3360',
+        textStyle: { color: '#E2E8F0', fontSize: 12 }
+      },
+      legend: {
+        show: true,
+        bottom: 6,
+        left: 'center',
+        textStyle: { color: '#94A3B8', fontSize: 11, padding: [0, 12, 0, 4] },
+        icon: 'circle',
+        itemWidth: 10,
+        itemHeight: 10,
+        data: categories.map(function(c) { return c.name; })
+      },
+      series: [{
+        type: 'graph',
+        layout: 'force',
+        roam: 'scale',
+        draggable: true,
+        categories: categories,
+        nodes: nodes,
+        links: links,
+        force: {
+          initIterations: 200,
+          repulsion: 600,
+          edgeLength: [120, 280],
+          gravity: 0.25,
+          friction: 0.6,
+          layoutAnimation: true
+        },
+        zoom: 1.2,
+        scaleLimit: { min: 0.5, max: 3 },
+        center: ['50%', '50%'],
+        lineStyle: {
+          color: '#334',        // 暗色线，在深色背景上可见
+          curveness: 0,
+          opacity: 0.5,
+          width: 1.2
+        },
+        edgeSymbol: ['none', 'none'],
+        edgeLabel: { fontSize: 10 },
+        label: {
+          show: true,
+          position: 'bottom',
+          distance: 6,
+          color: '#E2E8F0',
+          fontSize: 11,
+          fontWeight: 500,
+          rotate: 0,
+          overflow: 'truncate',
+          ellipsis: '..',
+          width: 64
+        },
+        labelLayout: { hideOverlap: true },
+        emphasis: {
+          focus: 'adjacency',
+          scale: true,
+          blurScope: 'coordinateSystem',
+          itemStyle: { shadowBlur: 20, shadowColor: 'rgba(27,127,229,0.6)' },
+          lineStyle: { width: 3, opacity: 1 },
+          label: { fontSize: 13, fontWeight: 700, color: '#fff' }
+        },
+        select: {
+          disabled: false,
+          itemStyle: { borderColor: '#fff', borderWidth: 2, shadowBlur: 20, shadowColor: 'rgba(27,127,229,0.7)' },
+          label: { fontSize: 13, fontWeight: 700, color: '#fff' }
+        }
+      }]
+    };
+
+    // ===== 设置 option（notMerge=true 强制全量替换） =====
+    relationChart.setOption(option, true);
+    console.log('[initRelationGraph] setOption done, chart should be visible');
+
+    // ===== 延迟 resize 确保布局正确 =====
+    setTimeout(function() {
+      if (relationChart && typeof relationChart.resize === 'function') {
+        relationChart.resize();
+        console.log('[initRelationGraph] delayed resize done');
+      }
+    }, 100);
+
+    // ===== 点击节点 → 选中 + 更新右侧详情 =====
+    relationChart.off('click');
+    relationChart.on('click', function(params) {
+      if (params.dataType === 'node') {
+        relationChart.dispatchAction({
+          type: 'select',
+          seriesIndex: 0,
+          dataIndex: params.dataIndex
+        });
+        var nodeId = params.data.id;
+        reviewState.selectedGraphNode = nodeId;
+        showRelationDetail(nodeId);
+        highlightLinkedElements(nodeId);
+      }
+    });
+
+    // ===== Resize 监听 =====
+    window.addEventListener('resize', function() {
+      if (relationChart && typeof relationChart.resize === 'function') {
+        try { relationChart.resize(); } catch(e) {}
+      }
+    });
+  }
+
+  function showRelationDetail(nodeId) {
+    var container = document.getElementById('relationDetail');
+    var data = relationData[nodeId];
+    if (!data) {
+      container.innerHTML = '<div class="rel-detail-placeholder"><div style="font-size:36px;margin-bottom:8px;opacity:0.5;">📭</div>暂无该节点详细信息</div>';
+      return;
+    }
+
+    var relsHtml = '';
+    data.relations.forEach(function(r) {
+      var typeColor = r.type === '诈骗' || r.type === '被诈骗' ? 'var(--danger)' :
+                      r.type === '资金流向' || r.type === '关联账户' ? 'var(--warning)' :
+                      'var(--accent)';
+      relsHtml += '<div style="font-size:11px;margin-bottom:6px;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:4px;">' +
+        '<span style="color:' + typeColor + ';font-weight:600;">' + r.type + '</span> → ' +
+        '<span style="color:#fff;">' + r.target + '</span>' +
+        '<div style="color:var(--text-muted);margin-top:2px;">' + r.detail + '</div>' +
+        '</div>';
+    });
+
+    var bgMap = {
+      suspect: 'rgba(239,68,68,0.1)',
+      victim: 'rgba(59,130,246,0.1)',
+      witness: 'rgba(16,185,129,0.1)',
+      evidence: 'rgba(245,158,11,0.1)',
+      bank: 'rgba(139,92,246,0.1)',
+      wechat: 'rgba(236,72,153,0.1)',
+      company: 'rgba(107,114,128,0.1)'
+    };
+
+    container.innerHTML =
+      '<div class="rel-detail-card" style="background:' + (bgMap[nodeId] || 'rgba(255,255,255,0.02)') + ';">' +
+        '<div class="rd-name">' + data.name + '</div>' +
+        '<div class="rd-row"><span class="rd-label">📝</span>' + data.desc + '</div>' +
+        '<div style="margin-top:10px;font-size:11px;color:var(--text-muted);font-weight:600;">关联关系：</div>' +
+        relsHtml +
+      '</div>';
+  }
+
+  // 重置视图按钮
+  var btnReset = document.getElementById('btnResetGraph');
+  if (btnReset) {
+    btnReset.addEventListener('click', function() {
+      if (relationChart) {
+        relationChart.dispatchAction({ type: 'restore' });
+      }
+      document.getElementById('relationDetail').innerHTML =
+        '<div class="rel-detail-placeholder"><div style="font-size:36px;margin-bottom:8px;opacity:0.5;">👆</div>点击图中节点<br>查看详细关联信息</div>';
+    });
+  }
+
+  // ============================================================
+  // ===== 审查中心 —— 模块4：要素提取（卡片点击） =====
+  // ============================================================
+  document.querySelectorAll('#page-review .element-card').forEach(function(card) {
+    card.addEventListener('click', function(e) {
+      // 移除其他卡片高亮
+      document.querySelectorAll('#page-review .element-card').forEach(function(c) {
+        c.style.borderColor = 'var(--border)';
+        c.style.boxShadow = '';
+      });
+      // 高亮当前卡片
+      this.style.borderColor = 'var(--accent)';
+      this.style.boxShadow = '0 0 16px rgba(27,127,229,0.2)';
+
+      // 获取要素名称
+      var title = this.querySelector('.ec-title');
+      var elemName = title ? title.textContent : '未知要素';
+
+      // 显示反馈
+      showToast('已选中: ' + elemName);
+      addRipple(this, e);
+    });
+  });
+
+  // ============================================================
+  // ===== 工具函数：涟漪效果 & Toast =====
+  // ============================================================
+  function addRipple(el, e) {
+    var ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    var rect = el.getBoundingClientRect();
+    var size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    el.style.position = el.style.position || 'relative';
+    el.style.overflow = el.style.overflow || 'hidden';
+    el.appendChild(ripple);
+    ripple.addEventListener('animationend', function() { ripple.remove(); });
+  }
+
+  function showToast(msg) {
+    // 移除已有 toast
+    var existing = document.querySelector('.review-toast');
+    if (existing) existing.remove();
+
+    var toast = document.createElement('div');
+    toast.className = 'review-toast';
+    toast.textContent = msg;
+    toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);' +
+      'background:var(--accent);color:#fff;padding:10px 24px;border-radius:20px;' +
+      'font-size:13px;font-weight:600;z-index:9999;' +
+      'animation: fadeIn 0.2s ease;box-shadow:0 4px 16px rgba(27,127,229,0.4);';
+    document.body.appendChild(toast);
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s';
+      setTimeout(function() { toast.remove(); }, 300);
+    }, 1500);
+  }
+
+  // ============================================================
+  // ===== 图谱节点联动高亮 =====
+  // ============================================================
+  function highlightLinkedElements(nodeId) {
+    // 清除之前的联动高亮
+    document.querySelectorAll('.linked-highlight').forEach(function(el) { el.classList.remove('linked-highlight'); });
+
+    // 根据节点类型联动相关UI元素
+    var targets = {
+      suspect:  { prob: '1', elem: 'person-suspect', label: '嫌疑人张某' },
+      victim:   { prob: null, elem: 'person-victim', label: '被害人李某' },
+      witness1: { prob: '4', elem: 'person-witness', label: '证人王某（银行柜员）' },
+      witness2: { prob: '4', elem: null, label: '证人赵某（保安）' },
+      evidence: { prob: '1', elem: 'evidence', label: '涉案手机物证' },
+      bank:     { prob: null, elem: 'evidence', label: '银行流水证据' },
+      wechat:   { prob: null, elem: 'evidence', label: '微信聊天记录' }
+    };
+
+    var t = targets[nodeId];
+    if (!t) return;
+
+    // 联动问题列表
+    if (t.prob) {
+      var probItem = document.querySelector('#problemList .problem-item[data-pid="' + t.prob + '"]');
+      if (probItem) {
+        document.querySelectorAll('#problemList .problem-item').forEach(function(p) { p.classList.remove('active'); });
+        probItem.classList.add('active');
+        probItem.classList.add('linked-highlight');
+        probItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        setTimeout(function() { probItem.classList.remove('linked-highlight'); }, 3000);
+      }
+    }
+
+    // 联动要素卡片
+    if (t.elem) {
+      var elemCard = document.querySelector('.element-card[data-elem="' + t.elem + '"]');
+      if (elemCard) {
+        elemCard.classList.add('linked-highlight');
+        elemCard.style.borderColor = 'var(--accent)';
+        elemCard.style.boxShadow = '0 0 16px rgba(27,127,229,0.3)';
+        elemCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        setTimeout(function() {
+          elemCard.classList.remove('linked-highlight');
+          elemCard.style.borderColor = 'var(--border)';
+          elemCard.style.boxShadow = '';
+        }, 3000);
+      }
+    }
+
+    showToast('🔗 已联动: ' + t.label);
+  }
+
+  // ============================================================
+  // ===== 溯源抽屉核心逻辑 =====
+  // ============================================================
+
+  // Mock卷宗原文数据
+  var dossierDocuments = {
+    '1': {
+      title: '扣押物品清单',
+      docType: '侦查卷 · 第42页',
+      fullText: '  北京市公安局刑侦支队\n  扣押物品清单\n  京公刑扣字[2026]第0102号\n\n  根据《中华人民共和国刑事诉讼法》第一百四十一条之规定，\n  侦查人员在本案侦查过程中，对下列物品予以扣押：\n\n  一、iPhone 14 Pro 手机壹部（黑色，IMEI: 356789012345678）\n      持有人：张某\n      扣押地点：北京市朝阳区XX路XX号XX室\n      扣押时间：2026年6月20日\n\n  二、中国工商银行借记卡叁张\n      卡号：6222****1234、6222****5678、6228****9012\n      持有人：张某\n\n  三、涉案合同文件叁份\n      《投资理财协议》壹份（共8页）\n      《收益承诺书》壹份（共2页）\n      《项目说明文件》壹份（共5页）\n\n  ⚠ 注意：扣押清单中未见对涉案手机的电子数据提取笔录，\n  亦未见扣押决定书。根据《刑事诉讼法》第一百四十一条，\n  扣押物品应当制作扣押决定书及清单，并由持有人、见证人\n  签名确认。当前卷宗中缺少上述文书，证据来源合法性存疑。\n\n  办案人员：陈某某（警号：BJ110234）\n  见证人：赵某某（身份证号：110101****5678）\n  日期：2026年6月20日',
+      highlights: [
+        { text: '扣押决定书', className: 'doc-highlight', note: '关键文书缺失' },
+        { text: '电子数据提取笔录', className: 'doc-highlight', note: '电子证据提取程序缺失' }
+      ]
+    },
+    '2': {
+      title: '讯问笔录（第二次）',
+      docType: '诉讼卷 · 第15页',
+      fullText: '  北京市公安局刑侦支队\n  讯问笔录（第二次）\n\n  讯问时间：2026年6月22日 10:00 — 11:30\n  讯问地点：北京市公安局刑侦支队讯问室\n  讯问人：李某（主办侦查员）、王某（记录人）\n  被讯问人：张某，男，35岁，汉族，无业\n\n  问：你叫什么名字？\n  答：张某。\n\n  问：你知道你为什么被刑事拘留吗？\n  答：知道，因为诈骗。\n\n  问：你把诈骗李某的经过详细说一下。\n  答：2025年10月份我在网上认识李某，后来加了微信。\n      我跟她说我有一个投资项目，回报率很高...\n\n  ⚠ 注意：本次讯问笔录中未见权利义务告知记录。\n  根据《刑事诉讼法》第一百一十八条，讯问犯罪嫌疑人时，\n  应当告知其享有的诉讼权利和义务。如讯问前未进行权利\n  义务告知，该笔录可能被作为非法证据予以排除。\n\n  被讯问人签名：张某（捺印）\n  讯问人签名：李某、王某',
+      highlights: [
+        { text: '权利义务告知', className: 'doc-highlight', note: '程序严重缺失' }
+      ]
+    },
+    '3': {
+      title: '拘留证',
+      docType: '侦查卷 · 第78页',
+      fullText: '  北京市公安局\n  拘留证\n  京公刑拘字[2026]第0102号\n\n  根据《中华人民共和国刑事诉讼法》第八十条之规定，\n  兹决定对犯罪嫌疑人张某执行刑事拘留。\n\n  拘留期限：30日（自2026年7月2日至2026年8月1日）\n\n  ⚠ 注意：根据《刑事诉讼法》第八十九条，对流窜作案、\n  多次作案、结伙作案的重大嫌疑分子，提请审查批准逮捕\n  的时间可以延长至30日，但需经上一级人民检察院批准。\n  当前卷宗中未见该批准文件。若缺少批准手续，延长拘留\n  期限属程序违法。\n\n  批准人：刘某某（支队长）\n  日期：2026年7月2日',
+      highlights: [
+        { text: '上一级人民检察院批准', className: 'doc-highlight', note: '批准文书缺失' }
+      ]
+    },
+    '4': {
+      title: '询问笔录（证人）',
+      docType: '侦查卷 · 第88页',
+      fullText: '  北京市公安局刑侦支队\n  询问笔录\n\n  询问时间：2026年6月25日 14:00 — 15:20\n  询问地点：北京市公安局刑侦支队询问室\n  询问人：李某\n  被询问人：王某，男，29岁，银行柜员\n\n  问：你认识张某吗？\n  答：认识，他是我们银行的客户。\n\n  问：请描述2026年3月15日的情况。\n  答：当天下午大约2点左右，张某带着一名女士来柜台办理\n      转账业务，金额是5万元。我记得比较清楚，因为金额\n      比较大，我还让他们填写了大额转账确认单。\n\n  ⚠ 注意：另一名证人（赵某，银行保安）证言中称，当天\n  看到张某和该女士是下午2:40左右到达银行门口，与王某\n  陈述的2点左右存在约40分钟时间差，需进一步核实。\n\n  被询问人签名：王某\n  询问人签名：李某',
+      highlights: [
+        { text: '2点左右', className: 'doc-highlight warn', note: '时间矛盾点（另一证人称2:40）' }
+      ]
+    },
+    '5': {
+      title: '伤情鉴定意见书',
+      docType: '证据卷 · 第56页',
+      fullText: '  XXX司法鉴定中心\n  法医学人体损伤程度鉴定书\n  鉴字[2026]第0789号\n\n  委托单位：北京市公安局刑侦支队\n  被鉴定人：李某，女，42岁\n  鉴定事项：损伤程度鉴定\n\n  鉴定意见：被鉴定人李某的损伤程度构成轻微伤。\n\n  ⚠ 注意：鉴定书末尾缺少鉴定机构公章，且仅有一名鉴定人\n  签字。根据《刑事诉讼法》第一百四十六条，鉴定意见书应\n  当由鉴定人签名并加盖鉴定机构公章。两名以上鉴定人共同\n  鉴定的，均应签名。\n\n  鉴定人：（缺签名）\n  日期：2026年6月28日',
+      highlights: [
+        { text: '鉴定机构公章', className: 'doc-highlight', note: '缺少公章' },
+        { text: '两名鉴定人', className: 'doc-highlight warn', note: '仅一人签字' }
+      ]
+    },
+    '6': {
+      title: '提请批准逮捕书',
+      docType: '侦查卷 · 第3页',
+      fullText: '  北京市公安局刑侦支队\n  提请批准逮捕书\n  京公刑捕字[2026]第0102号\n\n  犯罪嫌疑人张某，男，35岁，汉族，无业，住北京市朝阳区。\n\n   ⚠ 注意：文书中犯罪嫌疑人基本情况段落格式不符合\n  《公安机关办理刑事案件程序规定》第一百二十五条之格式\n  要求。"简历"、"家庭成员"等栏目未单独成段，建议按规范\n  模板调整后重新制作。\n\n  办案单位：北京市公安局刑侦支队\n  日期：2026年7月3日',
+      highlights: [
+        { text: '格式不符合', className: 'doc-highlight warn', note: '格式建议调整' }
+      ]
+    }
+  };
+
+  // 获取问题详情
+  function getProblemDetail(pid) {
+    var details = {
+      '1': { title: '证据链条断裂', loc: '侦查卷第42页', law: '《刑事诉讼法》第55条', suggest: '补充提取笔录及扣押决定书，完善证据链闭环', conf: '97%', status: '待整改', severity: 'high' },
+      '2': { title: '讯问程序违法风险', loc: '诉讼卷第15页', law: '《刑事诉讼法》第56条', suggest: '重新讯问并补充权利义务告知记录，否则该笔录可能作为非法证据予以排除', conf: '92%', status: '待整改', severity: 'high' },
+      '3': { title: '拘留期限超期风险', loc: '侦查卷第78页', law: '《刑事诉讼法》第89条', suggest: '补充上一级检察院批准延长拘留期限的文书或变更强制措施', conf: '89%', status: '待整改', severity: 'high' },
+      '4': { title: '证言时间矛盾', loc: '侦查卷第88页', law: '《刑事诉讼法》第50条', suggest: '分别再次询问两名证人，明确案发时间线，排除矛盾', conf: '85%', status: '复核中', severity: 'medium' },
+      '5': { title: '鉴定意见格式不规范', loc: '证据卷第56页', law: '《刑事诉讼法》第146条', suggest: '通知鉴定机构补正鉴定书，加盖公章并补充鉴定人签字', conf: '80%', status: '复核中', severity: 'medium' },
+      '6': { title: '文书格式建议', loc: '侦查卷第3页', law: '公安部《公安机关办理刑事案件程序规定》', suggest: '按文书规范模板调整段落格式后重新上传', conf: '88%', status: '建议修改', severity: 'low' }
+    };
+    return details[pid] || { title: '未知', loc: '-', law: '-', suggest: '-', conf: '-', status: '-', severity: 'low' };
+  }
+
+  // 打开溯源抽屉
+  function openDrawer(pid, silent) {
+    var docData = dossierDocuments[pid];
+    var probDetail = getProblemDetail(pid);
+    if (!docData) return;
+
+    reviewState.drawerOpen = true;
+    reviewState.drawerProblemId = pid;
+    reviewState.highlightIndex = 0;
+
+    // 计算高亮数量
+    reviewState.totalHighlights = docData.highlights ? docData.highlights.length : 0;
+
+    // 更新抽屉标题
+    document.getElementById('drawerTitle').textContent = '🔍 ' + probDetail.title + ' · 溯源';
+    document.getElementById('drawerMeta').textContent = probDetail.loc + ' · AI置信度 ' + probDetail.conf;
+    document.getElementById('drawerNavInfo').textContent = reviewState.totalHighlights > 0 ? '1/' + reviewState.totalHighlights : '0/0';
+
+    // 渲染卷宗原文（带高亮标记）
+    var docEl = document.getElementById('drawerDoc');
+    var text = docData.fullText;
+    var highlights = docData.highlights || [];
+
+    // 对高亮词进行标记替换
+    var processedHtml = escapeHtml(text);
+    highlights.forEach(function(h, i) {
+      var escapedKeyword = escapeHtml(h.text);
+      var marker = '<mark class="' + h.className + '" data-hidx="' + i + '" title="' + escapeHtml(h.note) + '">' + escapedKeyword + '</mark>';
+      // 处理文本中可能出现多次的情况（仅第一次高亮）
+      processedHtml = processedHtml.replace(escapedKeyword, marker);
+    });
+
+    docEl.innerHTML = '<div class="doc-header">' +
+      '<div class="doc-title">' + escapeHtml(docData.title) + '</div>' +
+      '<div class="doc-sub">' + escapeHtml(docData.docType) + '</div>' +
+      '</div>' +
+      '<div class="doc-content">' + processedHtml + '</div>';
+
+    // 高亮标记点击 → 导航到下一处
+    docEl.querySelectorAll('mark').forEach(function(mark) {
+      mark.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var idx = parseInt(this.getAttribute('data-hidx'));
+        reviewState.highlightIndex = idx;
+        navigateToHighlight(idx);
+      });
+    });
+
+    // 渲染右侧问题摘要
+    var sevTag = probDetail.severity === 'high' ? 'tag-danger' : (probDetail.severity === 'medium' ? 'tag-warning' : 'tag-info');
+    var sidebarEl = document.getElementById('drawerSidebar');
+    sidebarEl.innerHTML =
+      '<div class="ds-section-title">问题摘要</div>' +
+      '<div class="ds-card">' +
+        '<div class="ds-label">问题类型</div>' +
+        '<div class="ds-value">' + escapeHtml(probDetail.title) + ' <span class="tag ' + sevTag + '" style="display:inline-block;">' + escapeHtml(probDetail.status) + '</span></div>' +
+      '</div>' +
+      '<div class="ds-card">' +
+        '<div class="ds-label">📍 卷宗位置</div>' +
+        '<div class="ds-value">' + escapeHtml(probDetail.loc) + '</div>' +
+      '</div>' +
+      '<div class="ds-card">' +
+        '<div class="ds-label">⚖️ 法条依据</div>' +
+        '<div class="ds-value" style="font-size:12px;">' + escapeHtml(probDetail.law) + '</div>' +
+      '</div>' +
+      '<div class="ds-card">' +
+        '<div class="ds-label">💡 整改建议</div>' +
+        '<div class="ds-value" style="font-size:12px;">' + escapeHtml(probDetail.suggest) + '</div>' +
+      '</div>' +
+      '<div class="ds-card">' +
+        '<div class="ds-label">🤖 AI置信度</div>' +
+        '<div class="ds-value">' + escapeHtml(probDetail.conf) + '</div>' +
+      '</div>' +
+      '<button class="btn btn-primary btn-sm" style="margin-top:4px;" id="btnDrawerExport">📥 导出此问题报告</button>';
+
+    // 绑定导出按钮
+    setTimeout(function() {
+      var btnExp = document.getElementById('btnDrawerExport');
+      if (btnExp) {
+        btnExp.addEventListener('click', function() {
+          this.textContent = '✅ 已导出';
+          this.style.background = '#10B981';
+          this.style.borderColor = '#10B981';
+          setTimeout(function() {
+            btnExp.textContent = '📥 导出此问题报告';
+            btnExp.style.background = '';
+            btnExp.style.borderColor = '';
+          }, 2000);
+        });
+      }
+    }, 100);
+
+    // 打开抽屉
+    if (!silent) {
+      document.getElementById('drawerOverlay').classList.add('open');
+      document.getElementById('drawer').classList.add('open');
+    }
+
+    // 滚动到第一个高亮
+    if (reviewState.totalHighlights > 0) {
+      setTimeout(function() { navigateToHighlight(0); }, 400);
+    }
+  }
+
+  // 关闭溯源抽屉
+  function closeDrawer() {
+    reviewState.drawerOpen = false;
+    reviewState.drawerProblemId = null;
+    document.getElementById('drawerOverlay').classList.remove('open');
+    document.getElementById('drawer').classList.remove('open');
+  }
+
+  // 导航到指定高亮
+  function navigateToHighlight(idx) {
+    var docEl = document.getElementById('drawerDoc');
+    var marks = docEl.querySelectorAll('mark');
+    if (!marks.length) return;
+
+    idx = Math.max(0, Math.min(idx, marks.length - 1));
+    reviewState.highlightIndex = idx;
+    document.getElementById('drawerNavInfo').textContent = (idx + 1) + '/' + reviewState.totalHighlights;
+
+    // 移除所有 active
+    marks.forEach(function(m) { m.style.outline = ''; m.style.background = ''; });
+
+    // 高亮当前
+    var current = marks[idx];
+    current.style.outline = '3px solid #fff';
+    current.style.outlineOffset = '2px';
+    current.style.background = 'rgba(255,255,255,0.3)';
+
+    // 滚动到视图
+    current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // HTML 转义
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // 抽屉关闭按钮
+  document.getElementById('btnDrawerClose').addEventListener('click', closeDrawer);
+  document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
+
+  // 上一处 / 下一处
+  document.getElementById('btnDrawerPrev').addEventListener('click', function() {
+    if (reviewState.totalHighlights === 0) return;
+    var idx = reviewState.highlightIndex - 1;
+    if (idx < 0) idx = reviewState.totalHighlights - 1;
+    navigateToHighlight(idx);
+  });
+  document.getElementById('btnDrawerNext').addEventListener('click', function() {
+    if (reviewState.totalHighlights === 0) return;
+    var idx = reviewState.highlightIndex + 1;
+    if (idx >= reviewState.totalHighlights) idx = 0;
+    navigateToHighlight(idx);
+  });
+
+  // 键盘快捷键：ESC关闭抽屉，← → 导航高亮
+  document.addEventListener('keydown', function(e) {
+    if (!reviewState.drawerOpen) return;
+    if (e.key === 'Escape') {
+      closeDrawer();
+    } else if (e.key === 'ArrowRight') {
+      document.getElementById('btnDrawerNext').click();
+    } else if (e.key === 'ArrowLeft') {
+      document.getElementById('btnDrawerPrev').click();
+    }
+  });
+
+  // 手柄拖拽（简化：点击手柄区域关闭抽屉）
+  document.getElementById('drawerHandle').addEventListener('click', function() {
+    closeDrawer();
+  });
+
+  // ============================================================
+  // ===== 页面切换时初始化图表 + 状态保持 =====
+  // ============================================================
+  navItems.forEach(function(item) {
+    item.addEventListener('click', function() {
+      var page = this.getAttribute('data-page');
+
+      // 离开审查中心时保存状态快照
+      if (page !== 'review') {
+        saveSnapshot();
+        // 关闭抽屉
+        if (reviewState.drawerOpen) {
+          closeDrawer();
+        }
+      }
+
+      // 进入审查中心时初始化图表并恢复状态（含骨架屏）
+      if (page === 'review') {
+        // 重新显示骨架屏
+        var skeleton = document.getElementById('reviewSkeleton');
+        var content = document.getElementById('reviewContent');
+        if (skeleton && content) {
+          skeleton.classList.add('visible');
+          skeleton.classList.remove('skeleton-fade-out');
+          content.style.display = 'none';
+          content.classList.remove('content-fade-in');
+        }
+        setTimeout(function() {
+          initReviewCharts();
+          restoreSnapshot();
+        }, 150);
+      }
+    });
+  });
+
+  // 初始加载时如果是审查中心页面就初始化（含骨架屏过渡）
+  function initReviewCharts() {
+    var skeleton = document.getElementById('reviewSkeleton');
+    var content  = document.getElementById('reviewContent');
+
+    // ---- 关键：ECharts 必须在容器可见后才能初始化 ----
+    // 因为 #reviewContent 初始 display:none，canvas 会得到 0 尺寸
+    function _doInit() {
+      console.log('[initReviewCharts] content visible, initializing charts...');
+      initRiskDonut();
+      initRelationGraph();
+    }
+
+    if (skeleton && content) {
+      // 有骨架屏 → 先渐隐骨架，再显示内容，最后初始化图表
+      setTimeout(function() {
+        skeleton.classList.add('skeleton-fade-out');
+        setTimeout(function() {
+          skeleton.classList.remove('visible');
+          skeleton.classList.remove('skeleton-fade-out');
+          content.style.display = 'block';
+          content.classList.add('content-fade-in');
+
+          // ★ 内容可见后再初始化 ECharts
+          _doInit();
+
+          setTimeout(function() {
+            content.classList.remove('content-fade-in');
+          }, 400);
+        }, 350);
+      }, 300);
+    } else {
+      // 无骨架屏（回退）→ 确保内容可见后初始化
+      if (content) { content.style.display = 'block'; }
+      _doInit();
+    }
+  }
+
+  // ===== 内容可见后 resize 图表（防御性） =====
+  function refreshAllCharts() {
+    try {
+      if (riskChart && typeof riskChart.resize === 'function') {
+        riskChart.resize();
+      }
+    } catch(e) { console.warn('riskChart resize failed:', e); }
+    try {
+      if (relationChart && typeof relationChart.resize === 'function') {
+        relationChart.resize();
+      }
+    } catch(e) { console.warn('relationChart resize failed:', e); }
+  }
+
+  setTimeout(function() {
+    var reviewPage = document.getElementById('page-review');
+    if (reviewPage && reviewPage.classList.contains('active')) {
+      initReviewCharts();
+    }
+  }, 200);
+
+  // ============================================================
+  // ===== 产品级交互：导出报告弹窗 =====
+  // ============================================================
+  var modalOverlay = document.getElementById('exportModalOverlay');
+  var exportModal = document.getElementById('exportModal');
+  var selectedFormat = 'pdf';
+
+  // 格式选择
+  document.querySelectorAll('#formatGrid .format-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      document.querySelectorAll('#formatGrid .format-card').forEach(function(c) { c.classList.remove('selected'); });
+      this.classList.add('selected');
+      selectedFormat = this.getAttribute('data-format');
+      // 微小反馈
+      this.style.transform = 'scale(0.95)';
+      setTimeout(function(c) { c.style.transform = ''; }, 150, this);
+    });
+  });
+
+  // 打开弹窗（绑定到所有导出按钮）
+  function openExportModal() {
+    modalOverlay.classList.add('open');
+    resetExportModal();
+  }
+
+  // 关闭弹窗
+  function closeExportModal() {
+    modalOverlay.classList.remove('open');
+  }
+
+  document.getElementById('btnModalClose').addEventListener('click', closeExportModal);
+  modalOverlay.addEventListener('click', function(e) {
+    if (e.target === modalOverlay) closeExportModal();
+  });
+  document.getElementById('btnModalCancel').addEventListener('click', closeExportModal);
+
+  // 重置弹窗到步骤1
+  function resetExportModal() {
+    document.getElementById('exportStep1').style.display = 'block';
+    document.getElementById('exportStep2').classList.remove('visible');
+    document.getElementById('exportStep3').classList.remove('visible');
+    document.getElementById('modalFooter').style.display = 'flex';
+    document.getElementById('btnModalExport').textContent = '🚀 开始导出';
+    document.getElementById('btnModalExport').classList.remove('loading');
+    document.getElementById('btnModalExport').disabled = false;
+  }
+
+  // 开始导出（步骤1→2→3）
+  document.getElementById('btnModalExport').addEventListener('click', function() {
+    var btn = this;
+    btn.classList.add('loading');
+    btn.textContent = '导出中...';
+    btn.disabled = true;
+
+    // 显示进度步骤
+    document.getElementById('exportStep1').style.display = 'none';
+    var step2 = document.getElementById('exportStep2');
+    step2.classList.add('visible');
+
+    // 模拟进度
+    var phases = [
+      { pct: 15, text: '收集审查数据...', sub: '读取卷宗体检结果', delay: 400 },
+      { pct: 35, text: '分析程序合规性...', sub: '校验时间线节点', delay: 600 },
+      { pct: 55, text: '整理证据关系...', sub: '构建关系图谱数据', delay: 500 },
+      { pct: 75, text: '提取案件要素...', sub: '结构化人员信息', delay: 500 },
+      { pct: 90, text: '生成' + (selectedFormat === 'pdf' ? 'PDF' : selectedFormat === 'word' ? 'Word' : 'Excel') + '文档...', sub: '渲染报告模板', delay: 700 },
+      { pct: 100, text: '导出完成！', sub: '文件已就绪', delay: 300 }
+    ];
+
+    var bar = document.getElementById('epBar');
+    var pctEl = document.getElementById('epPct');
+    var textEl = document.getElementById('epText');
+    var subEl = document.getElementById('epSub');
+    var idx = 0;
+
+    function nextPhase() {
+      if (idx >= phases.length) return;
+      var p = phases[idx];
+      bar.style.width = p.pct + '%';
+      pctEl.textContent = p.pct + '%';
+      textEl.textContent = p.text;
+      subEl.textContent = p.sub;
+      idx++;
+      if (idx < phases.length) {
+        setTimeout(nextPhase, p.delay);
+      } else {
+        // 导出成功
+        setTimeout(function() {
+          step2.classList.remove('visible');
+          var step3 = document.getElementById('exportStep3');
+          step3.classList.add('visible');
+          document.getElementById('modalFooter').style.display = 'none';
+          var formatNames = { pdf: '审查报告.pdf', word: '审查报告.docx', excel: '问题清单.xlsx' };
+          document.getElementById('esText').textContent = '报告导出成功';
+          document.getElementById('esSub').textContent = '文件「' + (formatNames[selectedFormat] || '报告') + '」已保存至下载目录';
+        }, 400);
+      }
+    }
+
+    nextPhase();
+  });
+
+  // 模拟下载
+  document.getElementById('btnDownloadSim').addEventListener('click', function() {
+    var orig = this.textContent;
+    this.textContent = '⬇ 下载中...';
+    this.classList.add('loading');
+    this.disabled = true;
+    setTimeout(function() {
+      var btn = document.getElementById('btnDownloadSim');
+      btn.textContent = '✅ 下载完成';
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      btn.style.background = '#10B981';
+      btn.style.borderColor = '#10B981';
+      setTimeout(function() {
+        btn.textContent = orig;
+        btn.style.background = '';
+        btn.style.borderColor = '';
+        closeExportModal();
+      }, 1500);
+    }, 800);
+  });
+
+  // 复制链接
+  document.getElementById('btnShareSim').addEventListener('click', function() {
+    var orig = this.textContent;
+    this.textContent = '✅ 已复制';
+    setTimeout(function() {
+      document.getElementById('btnShareSim').textContent = orig;
+    }, 2000);
+  });
+
+  // 绑定导出按钮（审查中心 + 侧边栏 + 抽屉内的导出按钮）
+  document.querySelectorAll('#btnExportCheckup, #btnDrawerExport').forEach(function(btn) {
+    if (btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openExportModal();
+      });
+    }
+  });
+
+  // 也绑定重新绑定的抽屉导出按钮（因为drawer内容动态渲染）
+  var drawerExportObserver = new MutationObserver(function() {
+    var btn = document.getElementById('btnDrawerExport');
+    if (btn && !btn.hasAttribute('data-modal-bound')) {
+      btn.setAttribute('data-modal-bound', '1');
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openExportModal();
+      });
+    }
+  });
+  var drawerSidebar = document.getElementById('drawerSidebar');
+  if (drawerSidebar) {
+    drawerExportObserver.observe(drawerSidebar, { childList: true, subtree: true });
+  }
+
+  // ESC 关闭弹窗
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modalOverlay.classList.contains('open')) {
+      if (reviewState.drawerOpen) return; // 优先关闭抽屉
+      closeExportModal();
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
